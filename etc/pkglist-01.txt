@@ -1,0 +1,10 @@
+base-devel
+zeromq
+sudo
+git
+gnuplot
+maxima
+python-pip
+npm
+julia
+r

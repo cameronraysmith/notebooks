@@ -1,0 +1,14 @@
+man-db
+man-pages
+zsh
+zsh-completions
+tree
+vim
+fzf
+ripgrep
+the_silver_searcher
+grub
+dhclient
+openssh
+e2fsprogs
+ghostscript
