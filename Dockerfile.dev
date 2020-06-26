@@ -3,7 +3,7 @@ LABEL maintainer="Cameron Smith <cameron.ray.smith@gmail.com>"
 
 
 # setup environment
-ARG NB_USER=jupyter
+ARG NB_USER=jovyan
 ARG NB_UID=1000
 ENV USER ${NB_USER}
 ENV HOME /home/${NB_USER}
@@ -12,8 +12,6 @@ ENV PATH "${HOME}/.local/bin:${PATH}"
 
 # install arch packages
 COPY ./etc ${HOME}/etc
-COPY ./scripts ${HOME}/scripts
-COPY ./Dockerfile ${HOME}/scripts/
 
 ## install primary Arch packages
 RUN pacman -Syu --needed --noconfirm - < ${HOME}/etc/pkglist-01.txt && pacman -Scc --noconfirm
@@ -32,8 +30,10 @@ RUN cd /opt && \
 
 
 # install jupyter
-RUN pip install --user wheel jupyter jupyterlab && \
-    jupyter serverextension enable --user --py jupyterlab
+RUN pip install --user wheel jupyter jupyterlab jupyterlab-git jupyterlab_github && \
+    jupyter serverextension enable --user --py jupyterlab && \
+    jupyter labextension install @jupyterlab/git @jupyterlab/toc @jupyterlab/google-drive @jupyterlab/github @jupyterlab/commenting-extension && \
+    jupyter serverextension enable --user --py jupyterlab_git
 COPY ./etc/jupyter_notebook_config.py ${HOME}/.jupyter
 
 ## install julia jupyter kernel
@@ -69,6 +69,13 @@ RUN yay -S --needed --noconfirm "rcm>=1.3.3-1" && \
     git clone https://github.com/thoughtbot/dotfiles.git ~/dotfiles && \
     env RCRC=$HOME/dotfiles/rcrc rcup
 
+# copy configuration and jupyter theme files 
+COPY ./scripts ${HOME}/scripts
+COPY ./Dockerfile ${HOME}/scripts/
+COPY ./etc/themes.jupyterlab-settings ${HOME}/.jupyter/lab/user-settings/@jupyterlab/apputils-extension/themes.jupyterlab-settings
+COPY ./etc/plugin.jupyterlab-settings ${HOME}/.jupyter/lab/user-settings/@jupyterlab/terminal-extension/plugin.jupyterlab-settings
+RUN sudo chown -R ${USER}:${USER} ${HOME}/.jupyter && \
+    sudo chown -R ${USER}:${USER} ${HOME}/scripts
 
 # run jupyter lab on localhost:8080 by default
 CMD jupyter lab --ip=0.0.0.0 --port=8080

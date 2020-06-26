@@ -6,7 +6,7 @@ build: docker_build build_output
 
 srv:
 	docker run -it -p 8099:8080 \
-        -v $(shell pwd)/notebooks:/home/jupyter/notebooks \
+        -v $(shell pwd)/notebooks:/home/jovyan/notebooks \
         --label=notebooks \
         $(DOCKER_IMAGE):$(DOCKER_TAG)
 
