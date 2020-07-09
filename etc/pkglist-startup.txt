@@ -3,3 +3,5 @@ inkscape
 texlive-core
 texlive-latexextra
 time
+tmux
+hub

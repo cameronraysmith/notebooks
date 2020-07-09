@@ -12,3 +12,4 @@ dhclient
 openssh
 e2fsprogs
 ghostscript
+rsync

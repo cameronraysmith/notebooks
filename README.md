@@ -28,7 +28,9 @@ See the Makefile for relevant commands.
 │   ├── pkglist-02.txt
 │   ├── pkglist-startup.txt
 │   ├── pkglist-yay.txt
-│   └── python-libraries.txt
+│   ├── plugin.jupyterlab-settings
+│   ├── python-libraries.txt
+│   └── themes.jupyterlab-settings
 ├── notebooks
 │   ├── ...
 │   └── common-lisp-jupyter
