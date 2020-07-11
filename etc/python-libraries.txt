@@ -8,3 +8,4 @@ daft
 numpyro
 pyro-ppl
 pymc3
+git+https://github.com/jeffkaufman/icdiff.git

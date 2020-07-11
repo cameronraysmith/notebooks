@@ -13,3 +13,6 @@ openssh
 e2fsprogs
 ghostscript
 rsync
+time
+tmux
+hub
