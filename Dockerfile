@@ -16,7 +16,8 @@ RUN mkdir -p ${HOME}/etc
 COPY --chown=${NB_UID}:${NB_GID} ./etc/pkglist-01.txt ${HOME}/etc/
 
 ## install primary Arch packages
-RUN pacman -Syu --needed --noconfirm - < ${HOME}/etc/pkglist-01.txt && pacman -Scc --noconfirm
+RUN pacman -Syu --needed --noconfirm - < ${HOME}/etc/pkglist-01.txt
+RUN pacman -Scc --noconfirm
 RUN groupadd --gid=${NB_GID} ${NB_USER} && \
     useradd --create-home --shell=/bin/false --uid=${NB_UID} --gid=${NB_GID} ${NB_USER} && \
     echo "${NB_USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook && \
@@ -78,7 +79,7 @@ USER ${NB_UID}
 ## install yay AUR package manager
 RUN cd /opt && \
     sudo rm -rf ./yay-git && \
-    sudo git clone https://aur.archlinux.org/yay-git.git && \
+    sudo git clone https://aur.archlinux.org/yay.git ./yay-git && \
     sudo chown -R ${NB_UID}:${NB_GID} ./yay-git && \
     sudo chown -R ${NB_UID}:${NB_GID} ${HOME}/.cache && \
     sudo chown -R ${NB_UID}:${NB_GID} ${HOME}/.config && \
@@ -98,9 +99,10 @@ RUN sudo chown ${NB_UID}:${NB_GID} ${HOME} && \
     cp ${HOME}/etc/zshrc.local ${HOME}/dotfiles-local && \
     mv ${HOME}/.zshrc ${HOME}/.zshrc.oh-my-zsh.base && \
     env RCRC=$HOME/dotfiles/rcrc rcup && \
-    sudo usermod -s /bin/zsh jovyan
+    sudo usermod -s /bin/zsh ${NB_USER}
 
 COPY --chown=${NB_UID}:${NB_GID} ./etc/p10k.zsh ${HOME}/.p10k.zsh
+COPY --chown=${NB_UID}:${NB_GID} ./etc/jupyter_notebook_config.py ${HOME}/.jupyter
 
 # copy home directory to tmp for restoration
 RUN mkdir -p /tmp/homedir && \
@@ -131,6 +133,6 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.opencontainers.image.licenses="MIT"
 
 
-# run jupyter lab on localhost:8888 by default
-CMD jupyter lab --ip=0.0.0.0 --port=8888
-EXPOSE 8888/tcp
+# run jupyter lab on localhost:8080 by default
+CMD jupyter lab --ip=0.0.0.0 --port=8080
+EXPOSE 8080
