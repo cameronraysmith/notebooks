@@ -27,7 +27,7 @@ RUN groupadd --gid=${NB_GID} ${NB_USER} && \
 # install jupyter
 RUN pip install wheel jupyter jupyterlab jupyterlab-git jupyterlab_github nbgitpuller jupyterhub==1.1.0 && \
     jupyter serverextension enable --py jupyterlab --sys-prefix && \
-    jupyter labextension install @jupyterlab/git @jupyterlab/toc @jupyterlab/google-drive @jupyterlab/github @jupyterlab/commenting-extension && \
+    jupyter labextension install @jupyterlab/git @jupyterlab/toc @jupyterlab/google-drive @jupyterlab/github @jupyterlab/commenting-extension @jupyter-voila/jupyterlab-preview && \
     jupyter serverextension enable --py jupyterlab_git --sys-prefix
 
 ## install julia jupyter kernel
