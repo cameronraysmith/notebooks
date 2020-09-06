@@ -4,6 +4,8 @@
 # specify TYPE=dev to get builds based on Dockerfile.dev 
 build: docker_build build_output
 
+build_and_push: docker_build build_output docker_push 
+
 srv:
 	docker run -it -p 8099:8080 \
         -v $(shell pwd)/notebooks:/home/jovyan/notebooks \

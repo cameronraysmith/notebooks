@@ -30,6 +30,10 @@ RUN pip install wheel jupyter jupyterlab jupyterlab-git jupyterlab_github nbgitp
     jupyter labextension install @jupyterlab/git @jupyterlab/toc @jupyterlab/google-drive @jupyterlab/github @jupyterlab/commenting-extension @jupyter-voila/jupyterlab-preview && \
     jupyter serverextension enable --py jupyterlab_git --sys-prefix
 
+# install python libraries
+COPY --chown=${NB_UID}:${NB_GID} ./etc/python-libraries.txt ${HOME}/etc/
+RUN pip install -r ${HOME}/etc/python-libraries.txt
+
 ## install julia packages including jupyter kernel
 COPY --chown=${NB_UID}:${NB_GID} ./etc/Project.toml ${HOME}/.julia/environments/v${JULIA_MAJOR_VERSION}/
 RUN julia -e 'using Pkg; Pkg.instantiate(); Pkg.API.precompile()'
@@ -69,7 +73,7 @@ COPY --chown=${NB_UID}:${NB_GID} ./etc/themes.jupyterlab-settings ${HOME}/.jupyt
 COPY --chown=${NB_UID}:${NB_GID} ./etc/plugin.jupyterlab-settings ${HOME}/.jupyter/lab/user-settings/@jupyterlab/terminal-extension/plugin.jupyterlab-settings
 
 # copy additional etc files
-COPY --chown=${NB_UID}:${NB_GID} ./etc/pkglist-startup.txt ./etc/pkglist-yay.txt ./etc/python-libraries.txt ./etc/themes.jupyterlab-settings /etc/plugin.jupyterlab-settings ./etc/zshrc.local ${HOME}/etc/
+COPY --chown=${NB_UID}:${NB_GID} ./etc/pkglist-startup.txt ./etc/pkglist-yay.txt ./etc/themes.jupyterlab-settings /etc/plugin.jupyterlab-settings ./etc/zshrc.local ${HOME}/etc/
 
 # reset home directory permissions
 RUN chown -R ${NB_UID}:${NB_GID} ${HOME}
