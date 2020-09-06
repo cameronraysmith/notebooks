@@ -30,9 +30,8 @@ RUN pip install wheel jupyter jupyterlab jupyterlab-git jupyterlab_github nbgitp
     jupyter labextension install @jupyterlab/git @jupyterlab/toc @jupyterlab/google-drive @jupyterlab/github @jupyterlab/commenting-extension @jupyter-voila/jupyterlab-preview && \
     jupyter serverextension enable --py jupyterlab_git --sys-prefix
 
-## install julia packages including jupyter kernel
-COPY --chown=${NB_UID}:${NB_GID} ./etc/Project.toml ${HOME}/.julia/environments/v*.*/
-RUN julia -e 'using Pkg; Pkg.instantiate(); Pkg.API.precompile()'
+## install julia jupyter kernel
+RUN julia -e 'using Pkg; Pkg.add("IJulia")'
 
 ## install maxima jupyter kernel
 RUN git clone https://github.com/cameronraysmith/maxima-jupyter.git ${HOME}/maxima-jupyter
