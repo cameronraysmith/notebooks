@@ -9,7 +9,7 @@ ARG NB_GID="100"
 ENV USER ${NB_USER}
 ENV HOME /home/${NB_USER}
 ENV PATH "${HOME}/.local/bin:${PATH}"
-
+ENV JULIA_MAJOR_VERSION="1.5"
 
 # install primary arch packages
 RUN mkdir -p ${HOME}/etc
@@ -30,8 +30,9 @@ RUN pip install wheel jupyter jupyterlab jupyterlab-git jupyterlab_github nbgitp
     jupyter labextension install @jupyterlab/git @jupyterlab/toc @jupyterlab/google-drive @jupyterlab/github @jupyterlab/commenting-extension @jupyter-voila/jupyterlab-preview && \
     jupyter serverextension enable --py jupyterlab_git --sys-prefix
 
-## install julia jupyter kernel
-RUN julia -e 'using Pkg; Pkg.add("IJulia")'
+## install julia packages including jupyter kernel
+COPY --chown=${NB_UID}:${NB_GID} ./etc/Project.toml ${HOME}/.julia/environments/v${JULIA_MAJOR_VERSION}/
+RUN julia -e 'using Pkg; Pkg.instantiate(); Pkg.API.precompile()'
 
 ## install maxima jupyter kernel
 RUN git clone https://github.com/cameronraysmith/maxima-jupyter.git ${HOME}/maxima-jupyter
