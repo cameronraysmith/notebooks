@@ -135,5 +135,5 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
 
 
 # run jupyter lab on localhost:8080 by default
-CMD jupyter lab --ip=0.0.0.0 --port=8080 > /home/jovyan/jupyter-lab.log 2>&1
+CMD jupyter lab --ip=0.0.0.0 --port=8080 > ${HOME}/jupyter-lab.log 2>&1
 EXPOSE 8080
