@@ -73,7 +73,7 @@ COPY --chown=${NB_UID}:${NB_GID} ./etc/themes.jupyterlab-settings ${HOME}/.jupyt
 COPY --chown=${NB_UID}:${NB_GID} ./etc/plugin.jupyterlab-settings ${HOME}/.jupyter/lab/user-settings/@jupyterlab/terminal-extension/plugin.jupyterlab-settings
 
 # copy additional etc files
-COPY --chown=${NB_UID}:${NB_GID} ./etc/pkglist-startup.txt ./etc/pkglist-yay.txt ./etc/themes.jupyterlab-settings /etc/plugin.jupyterlab-settings ./etc/zshrc.local ${HOME}/etc/
+COPY --chown=${NB_UID}:${NB_GID} ./etc/pkglist-startup.txt ./etc/pkglist-yay.txt ./etc/themes.jupyterlab-settings /etc/plugin.jupyterlab-settings ./etc/zshrc.local ./etc/gitconfig.local ${HOME}/etc/
 
 # reset home directory permissions
 RUN chown -R ${NB_UID}:${NB_GID} ${HOME}
