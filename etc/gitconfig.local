@@ -1,0 +1,30 @@
+[alias]
+	br = branch
+	bra = branch -a
+	cavm = commit -a -v -m
+	cfg = config --list
+	ci = commit -s
+	cm = commit -m
+	co = checkout
+	dns = diff origin/master master --name-status
+	dt = difftool -t meld --dir-diff
+	dtmd = difftool -t meld --dir-diff master..develop
+	dtdm = difftool -t meld --dir-diff develop..master
+	dh = diff HEAD
+	db = branch -d
+	ls = ls-tree --full-tree -r HEAD
+	lpo = log --pretty=oneline
+	m = merge
+	nb = checkout -b
+	pao = push --all origin
+	pom = push origin master
+	pot = push origin --tags
+	pgm = push github master
+	phm = push heroku master
+	rao = remote add origin
+	rso = remote show origin
+	rsu = remote set-url
+	st = status
+	stn = status -uno # show status without listing untracked files
+	unst = stash show -p | git apply -R
+	vis = !gitk --all &
