@@ -11,3 +11,4 @@ pymc3
 seaborn
 theano
 git+https://github.com/jeffkaufman/icdiff.git
+sklearn
