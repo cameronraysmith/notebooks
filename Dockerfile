@@ -71,9 +71,11 @@ COPY --chown=${NB_UID}:${NB_GID} ./scripts ${HOME}/scripts
 COPY --chown=${NB_UID}:${NB_GID} ./Dockerfile ${HOME}/scripts/
 COPY --chown=${NB_UID}:${NB_GID} ./etc/themes.jupyterlab-settings ${HOME}/.jupyter/lab/user-settings/@jupyterlab/apputils-extension/themes.jupyterlab-settings
 COPY --chown=${NB_UID}:${NB_GID} ./etc/plugin.jupyterlab-settings ${HOME}/.jupyter/lab/user-settings/@jupyterlab/terminal-extension/plugin.jupyterlab-settings
+RUN mkdir -p ${HOME}/.jupyter/lab/user-settings/@jupyterlab/notebook-extension
+COPY --chown=${NB_UID}:${NB_GID} ./etc/tracker.jupyterlab-settings ${HOME}/.jupyter/lab/user-settings/@jupyterlab/notebook-extension/tracker.jupyterlab-settings
 
 # copy additional etc files
-COPY --chown=${NB_UID}:${NB_GID} ./etc/pkglist-startup.txt ./etc/pkglist-yay.txt ./etc/themes.jupyterlab-settings /etc/plugin.jupyterlab-settings ./etc/zshrc.local ./etc/gitconfig.local ${HOME}/etc/
+COPY --chown=${NB_UID}:${NB_GID} ./etc/pkglist-startup.txt ./etc/pkglist-yay.txt ./etc/themes.jupyterlab-settings /etc/plugin.jupyterlab-settings ./etc/zshrc.local ./etc/gitconfig.local ./etc/tracker.jupyterlab-settings ${HOME}/etc/
 
 # reset home directory permissions
 RUN chown -R ${NB_UID}:${NB_GID} ${HOME}
