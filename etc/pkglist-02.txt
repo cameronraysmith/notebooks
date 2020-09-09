@@ -16,3 +16,4 @@ rsync
 time
 tmux
 hub
+htop
