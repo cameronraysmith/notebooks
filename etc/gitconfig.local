@@ -30,3 +30,8 @@
 	vis = !gitk --all &
 [hub]
     protocol = https
+[core]
+    excludesfile = ~/.gitexcludes
+    editor = vim
+[push]
+    default = current
