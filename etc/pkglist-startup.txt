@@ -1,5 +1,6 @@
 otf-latin-modern
 pandoc
+pandoc-citeproc
 inkscape
 texlive-core
 texlive-latexextra
