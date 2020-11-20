@@ -10,6 +10,7 @@ hub
 man-db
 man-pages
 openssh
+otf-latin-modern
 ripgrep
 rsync
 the_silver_searcher
