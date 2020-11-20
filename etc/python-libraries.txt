@@ -9,6 +9,14 @@ daft
 numpyro
 pymc3
 seaborn
+sos
+sos-notebook
+sos-bash
+sos-bioinfo
+sos-julia
+sos-papermill
+sos-python
+sos-r
 theano
 git+https://github.com/jeffkaufman/icdiff.git
 sklearn

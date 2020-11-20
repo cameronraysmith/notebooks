@@ -27,7 +27,7 @@ RUN groupadd --gid=${NB_GID} ${NB_USER} && \
 # install jupyter
 RUN pip install wheel jupyter jupyterlab jupyterlab-git jupyterlab_github nbgitpuller jupyterhub==1.1.0 jupytext RISE voila && \
     jupyter serverextension enable --py jupyterlab --sys-prefix && \
-    jupyter labextension install @jupyterlab/git @jupyterlab/toc @jupyterlab/google-drive @jupyterlab/github @jupyterlab/commenting-extension @jupyter-voila/jupyterlab-preview @aquirdturtle/collapsible_headings jupyterlab-execute-time jupyterlab-skip-traceback && \
+    jupyter labextension install @jupyterlab/git @jupyterlab/toc @jupyterlab/google-drive @jupyterlab/github @jupyterlab/commenting-extension @jupyter-voila/jupyterlab-preview @aquirdturtle/collapsible_headings jupyterlab-execute-time jupyterlab-skip-traceback transient-display-data jupyterlab-sos && \
     jupyter serverextension enable --py jupyterlab_git --sys-prefix
 
 # install python libraries
@@ -55,6 +55,7 @@ RUN curl -O https://beta.quicklisp.org/quicklisp.lisp && \
 ## install R jupyter kernel
 RUN echo "install.packages('IRkernel', repos='http://cran.us.r-project.org')" | R --slave && \
     echo "IRkernel::installspec()" | R --slave && \
+    python -m sos_notebook.install && \
     jupyter kernelspec list
 
 
