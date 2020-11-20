@@ -12,6 +12,12 @@ srv:
         --label=notebooks \
         $(DOCKER_IMAGE):$(DOCKER_TAG)
 
+srvlatest:
+	docker run -it -p 8099:8080 \
+        -v $(shell pwd)/notebooks:/home/jovyan/notebooks \
+        --label=notebooks \
+        $(DOCKER_IMAGE):latest
+
 restart: kill srv;
 
 sh:
