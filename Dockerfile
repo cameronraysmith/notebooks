@@ -27,25 +27,7 @@ RUN groupadd --gid=${NB_GID} ${NB_USER} && \
 # install jupyter
 RUN pip install wheel jupyter jupyterlab jupyterlab-git jupyterlab_github nbgitpuller jupyterhub==1.1.0 jupytext RISE voila && \
     jupyter serverextension enable --py jupyterlab --sys-prefix && \
-    jupyter labextension install \
-                   @jupyterlab/git \
-                   @jupyterlab/toc \
-                   @jupyterlab/google-drive \
-                   @jupyterlab/github \
-                   @jupyterlab/commenting-extension \
-                   @jupyterlab/latex \
-                   @jupyter-voila/jupyterlab-preview \
-                   @aquirdturtle/collapsible_headings \
-                   @arbennett/base16-nord \
-                   @lckr/jupyterlab_variableinspector \
-                   @bokeh/jupyter_bokeh \
-                   jupyterlab-plotly \
-                   jupyterlab-execute-time \
-                   jupyterlab-skip-traceback \
-                   transient-display-data \
-                   jupyterlab-sos \
-                   jupyterlab-topbar-extension \
-                   jupyterlab-system-monitor && \
+    jupyter labextension install @jupyterlab/git @jupyterlab/toc @jupyterlab/google-drive @jupyterlab/github @jupyterlab/commenting-extension @jupyterlab/latex @jupyter-voila/jupyterlab-preview @aquirdturtle/collapsible_headings @arbennett/base16-nord @lckr/jupyterlab_variableinspector @bokeh/jupyter_bokeh jupyterlab-plotly jupyterlab-execute-time jupyterlab-skip-traceback transient-display-data jupyterlab-sos jupyterlab-topbar-extension jupyterlab-system-monitor && \
     jupyter serverextension enable --py jupyterlab_git --sys-prefix
 
 # install python libraries
