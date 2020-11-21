@@ -9,6 +9,7 @@ dask
 daft
 ipywidgets
 jupyterlab_latex
+nbdev
 numpyro
 plotly
 pymc3
