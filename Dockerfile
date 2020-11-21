@@ -63,6 +63,9 @@ RUN echo "install.packages('IRkernel', repos='http://cran.us.r-project.org')" | 
 COPY --chown=${NB_UID}:${NB_GID} ./etc/pkglist-02.txt ${HOME}/etc/
 RUN pacman -Syu --needed --noconfirm - < ${HOME}/etc/pkglist-02.txt && pacman -Scc --noconfirm
 
+# rebuild jupyter lab
+RUN jupyter lab build
+
 # Copy startup scripts from jupyter-docker-stacks
 COPY stacks/*.sh /usr/local/bin/
 COPY stacks/jupyter_notebook_config.py /etc/jupyter/
