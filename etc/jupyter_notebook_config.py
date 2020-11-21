@@ -9,3 +9,8 @@ c.NotebookApp.allow_origin_pat = '(^https://8080-dot-[0-9]+-dot-devshell\.appspo
 c.NotebookApp.allow_remote_access = True
 c.NotebookApp.disable_check_xsrf = False
 c.NotebookApp.notebook_dir = '/home/jovyan'
+
+# jupyterlab-system-monitor settings
+c.NotebookApp.ResourceUseDisplay.mem_limit = 4026531840
+c.NotebookApp.ResourceUseDisplay.track_cpu_percent = True
+c.NotebookApp.ResourceUseDisplay.cpu_limit = 1
