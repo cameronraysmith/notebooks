@@ -13,6 +13,7 @@ openssh
 otf-latin-modern
 ripgrep
 rsync
+texlive-most
 the_silver_searcher
 time
 tmux
