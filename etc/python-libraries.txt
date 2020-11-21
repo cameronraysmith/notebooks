@@ -7,9 +7,10 @@ bokeh
 causalgraphicalmodels
 dask
 daft
+git+https://github.com/jeffkaufman/icdiff.git
 ipywidgets
 jupyterlab_latex
-nbdev
+git+https://github.com/cameronraysmith/nbdev.git
 numpyro
 plotly
 pymc3
@@ -25,5 +26,4 @@ sos-papermill
 sos-python
 sos-r
 theano
-git+https://github.com/jeffkaufman/icdiff.git
 sklearn
