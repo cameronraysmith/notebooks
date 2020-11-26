@@ -131,9 +131,15 @@ set_tags_gcp:
 	gcloud compute instances add-tags $(GCP_VM) --tags=https-server
 
 wait:
-	sleep 20
+	sleep 30
 
-switch_gcp: stop_previous_gcp detach_data_disk_gcp attach_data_disk_gcp start_gcp wait ssl_redirect_gcp
+update_ip_gcp_cf:
+	GCP_IP=`gcloud compute instances describe $(GCP_VM) --format="get(networkInterfaces[0].accessConfigs[0].natIP)"`; \
+	echo $$GCP_IP ; \
+	scripts/cloudflare-update.sh $$GCP_IP | json_pp
+
+switch_gcp: stop_previous_gcp detach_data_disk_gcp attach_data_disk_gcp start_gcp wait ssl_redirect_gcp update_ip_gcp_cf
+
 
 #-----------------------#
 
