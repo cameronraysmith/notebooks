@@ -1,4 +1,4 @@
-.PHONY=build srv restart sh clean kill docker_push docker_build build_output
+.PHONY=build srv restart sh clean kill docker_push docker_build build_output create_gcp update_gcp start_gcp stop_gcp ssh_gcp ssh_container_gcp ssl_to_gcp ssl_redirect_gcp
 
 # Build Docker image
 # specify TYPE=dev to get builds based on Dockerfile.dev 
@@ -57,6 +57,62 @@ endif
 build_output:
 	@echo Docker Image: $(DOCKER_IMAGE):$(DOCKER_TAG)
 
+create_gcp:
+	gcloud compute instances create-with-container $(GCP_VM) \
+    --container-image registry.hub.docker.com/$(DOCKER_IMAGE):latest \
+    --container-restart-policy on-failure \
+    --container-privileged \
+    --container-stdin \
+    --container-tty \
+    --container-mount-host-path mount-path=/home/jupyter,host-path=/tmp,mode=rw \
+	--container-command "jupyter" \
+	--container-arg="lab" \
+	--container-arg="--ip=0.0.0.0" \
+	--container-arg="--port=8443" \
+	--container-arg="--NotebookApp.ResourceUseDisplay.mem_limit=4026531840" \
+	--container-arg="--NotebookApp.ResourceUseDisplay.track_cpu_percent=True" \
+	--container-arg="--NotebookApp.ResourceUseDisplay.cpu_limit=1" \
+	--container-arg="--NotebookApp.allow_origin='*'" \
+	--container-arg="--NotebookApp.ip='*'" \
+    --container-arg="--NotebookApp.password=<type:salt:hashed-password>" \
+    --machine-type n1-standard-1 \
+    --boot-disk-size 50GB \
+	--disk name=data,mode=rw \
+    --preemptible
+
+update_gcp:
+	gcloud compute instances update-container $(GCP_VM) \
+	--container-mount-disk name=data,mount-path=/data \
+	--container-command "jupyter" \
+	--container-arg="lab" \
+	--container-arg="--ip=0.0.0.0" \
+	--container-arg="--port=8443" \
+	--container-arg="--NotebookApp.allow_origin='*'" \
+	--container-arg="--NotebookApp.ip='*'" \
+    --container-arg="--NotebookApp.password=<type:salt:hashed-password>" \
+	--container-arg="--NotebookApp.certfile='/data/jovyan/certs/cf-cert.pem'" \
+	--container-arg="--NotebookApp.keyfile='/data/jovyan/certs/cf-key.pem'" \
+	--container-arg="--NotebookApp.notebook_dir='/data/jovyan/projects'"
+
+start_gcp:
+	gcloud compute instances start $(GCP_VM)
+
+stop_gcp:
+	gcloud compute instances stop $(GCP_VM)
+
+ssh_gcp:
+	gcloud compute ssh $(GCP_VM)
+
+ssh_container_gcp:
+	gcloud compute ssh $(GCP_VM) --container $(GCP_CONTAINER)
+
+ssl_to_gcp:
+	gcloud compute scp --recurse etc/certs \
+           jovyan@$(GCP_VM):/mnt/disks/gce-containers-mounts/gce-persistent-disks/data/jovyan
+
+ssl_redirect_gcp:
+	gcloud compute ssh jovyan@$(GCP_VM) \
+		   --command 'sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8443'
 
 #-----------------------#
 
@@ -85,3 +141,6 @@ ifeq ($(TYPE),dev)
 else
 	DOCKER_TAG = $(CODE_VERSION)-$(GIT_COMMIT)$(DOCKER_TAG_SUFFIX)
 endif
+
+GCP_VM = notebooks-vm
+GCP_CONTAINER = klt-notebooks-vm-cjme
