@@ -131,7 +131,7 @@ set_tags_gcp:
 	gcloud compute instances add-tags $(GCP_VM) --tags=https-server
 
 wait:
-	sleep 12
+	sleep 20
 
 switch_gcp: stop_previous_gcp detach_data_disk_gcp attach_data_disk_gcp start_gcp wait ssl_redirect_gcp
 
