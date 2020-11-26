@@ -23,20 +23,26 @@ See the Makefile for relevant commands.
 ├── README.md
 ├── VERSION
 ├── etc
+│   ├── Project.toml
+│   ├── certs
+│   │   ├── cf-cert.pem
+│   │   └── cf-key.pem
+│   ├── gitconfig.local
 │   ├── jupyter_notebook_config.py
+│   ├── p10k.zsh
 │   ├── pkglist-01.txt
 │   ├── pkglist-02.txt
 │   ├── pkglist-startup.txt
 │   ├── pkglist-yay.txt
 │   ├── plugin.jupyterlab-settings
 │   ├── python-libraries.txt
-│   └── themes.jupyterlab-settings
+│   ├── themes.jupyterlab-settings
+│   ├── tracker.jupyterlab-settings
+│   └── zshrc.local
 ├── notebooks
 │   ├── ...
-│   └── common-lisp-jupyter
-│       ├── ...
 └── scripts
-    └── startup.sh
+    └── startup.sh
 ```
 
 ## LICENSE
