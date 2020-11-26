@@ -59,12 +59,12 @@ build_output:
 
 create_gcp:
 	gcloud compute instances create-with-container $(GCP_VM) \
-    --container-image registry.hub.docker.com/$(DOCKER_IMAGE):latest \
-    --container-restart-policy on-failure \
-    --container-privileged \
-    --container-stdin \
-    --container-tty \
-    --container-mount-host-path mount-path=/home/jupyter,host-path=/tmp,mode=rw \
+	--container-image registry.hub.docker.com/$(DOCKER_IMAGE):latest \
+	--container-restart-policy on-failure \
+	--container-privileged \
+	--container-stdin \
+	--container-tty \
+	--container-mount-host-path mount-path=/home/jupyter,host-path=/tmp,mode=rw \
 	--container-command "jupyter" \
 	--container-arg="lab" \
 	--container-arg="--ip=0.0.0.0" \
@@ -74,11 +74,11 @@ create_gcp:
 	--container-arg="--NotebookApp.ResourceUseDisplay.cpu_limit=1" \
 	--container-arg="--NotebookApp.allow_origin='*'" \
 	--container-arg="--NotebookApp.ip='*'" \
-    --container-arg="--NotebookApp.password=<type:salt:hashed-password>" \
-    --machine-type n1-standard-1 \
-    --boot-disk-size 50GB \
+	--container-arg="--NotebookApp.password=<type:salt:hashed-password>" \
+	--machine-type n1-standard-1 \
+	--boot-disk-size 50GB \
 	--disk name=data,mode=rw \
-    --preemptible
+	--preemptible
 
 update_gcp:
 	gcloud compute instances update-container $(GCP_VM) \
@@ -89,7 +89,7 @@ update_gcp:
 	--container-arg="--port=8443" \
 	--container-arg="--NotebookApp.allow_origin='*'" \
 	--container-arg="--NotebookApp.ip='*'" \
-    --container-arg="--NotebookApp.password=<type:salt:hashed-password>" \
+	--container-arg="--NotebookApp.password=<type:salt:hashed-password>" \
 	--container-arg="--NotebookApp.certfile='/data/jovyan/certs/cf-cert.pem'" \
 	--container-arg="--NotebookApp.keyfile='/data/jovyan/certs/cf-key.pem'" \
 	--container-arg="--NotebookApp.notebook_dir='/data/jovyan/projects'"
