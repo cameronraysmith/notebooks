@@ -119,6 +119,9 @@ COPY --chown=${NB_UID}:${NB_GID} ./etc/jupyter_notebook_config.py ${HOME}/.jupyt
 RUN mkdir -p /tmp/homedir && \
     cp -a ${HOME}/. /tmp/homedir/
 
+RUN sudo setcap CAP_NET_BIND_SERVICE=+eip /usr/sbin/jupyter && \
+    sudo setcap CAP_NET_BIND_SERVICE=+eip /usr/bin/jupyter
+
 # Metadata
 # https://github.com/label-schema/label-schema.org
 # https://github.com/opencontainers/image-spec/blob/master/annotations.md
