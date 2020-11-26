@@ -7,10 +7,12 @@ ghostscript
 grub
 htop
 hub
+inkscape
 man-db
 man-pages
 openssh
 otf-latin-modern
+pandoc
 ripgrep
 rsync
 texlive-most
@@ -19,5 +21,6 @@ time
 tmux
 tree
 vim
+wget
 zsh
 zsh-completions
