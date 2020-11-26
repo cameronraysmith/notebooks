@@ -1,4 +1,4 @@
-.PHONY=build srv restart sh clean kill docker_push docker_build build_output create_gcp update_gcp start_gcp stop_gcp ssh_gcp ssh_container_gcp ssl_to_gcp ssl_redirect_gcp
+.PHONY=build srv restart sh clean kill docker_push docker_build build_output create_gcp update_gcp start_gcp setup_gcp stop_gcp stop_previous_gcp ssh_gcp ssh_container_gcp ssl_to_gcp ssl_redirect_gcp attach_data_disk_gcp detach_data_disk_gcp set_tags_gcp wait switch_gcp
 
 # Build Docker image
 # specify TYPE=dev to get builds based on Dockerfile.dev 
@@ -64,7 +64,7 @@ create_gcp:
 	--container-privileged \
 	--container-stdin \
 	--container-tty \
-	--container-mount-host-path mount-path=/home/jupyter,host-path=/tmp,mode=rw \
+	--container-mount-host-path mount-path=/home/jupyter,host-path=/home/jupyter,mode=rw \
 	--container-command "jupyter" \
 	--container-arg="lab" \
 	--container-arg="--ip=0.0.0.0" \
@@ -75,14 +75,15 @@ create_gcp:
 	--container-arg="--NotebookApp.allow_origin='*'" \
 	--container-arg="--NotebookApp.ip='*'" \
 	--container-arg="--NotebookApp.password=<type:salt:hashed-password>" \
-	--machine-type n1-standard-1 \
+	--machine-type n1-standard-2 \
 	--boot-disk-size 50GB \
-	--disk name=data,mode=rw \
+	--disk auto-delete=no,boot=no,device-name=data,mode=rw,name=data \
+	--container-mount-disk mode=rw,mount-path=/data,name=data \
+	--tags=http-server,https-server \
 	--preemptible
 
 update_gcp:
 	gcloud compute instances update-container $(GCP_VM) \
-	--container-mount-disk name=data,mount-path=/data \
 	--container-command "jupyter" \
 	--container-arg="lab" \
 	--container-arg="--ip=0.0.0.0" \
@@ -97,8 +98,13 @@ update_gcp:
 start_gcp:
 	gcloud compute instances start $(GCP_VM)
 
+setup_gcp: start_gcp wait ssl_redirect_gcp
+
 stop_gcp:
 	gcloud compute instances stop $(GCP_VM)
+
+stop_previous_gcp:
+	gcloud compute instances stop $(GCP_VM_PREVIOUS)
 
 ssh_gcp:
 	gcloud compute ssh $(GCP_VM)
@@ -108,11 +114,26 @@ ssh_container_gcp:
 
 ssl_to_gcp:
 	gcloud compute scp --recurse etc/certs \
-           jovyan@$(GCP_VM):/mnt/disks/gce-containers-mounts/gce-persistent-disks/data/jovyan
+	jovyan@$(GCP_VM):/mnt/disks/gce-containers-mounts/gce-persistent-disks/data/jovyan
 
 ssl_redirect_gcp:
 	gcloud compute ssh jovyan@$(GCP_VM) \
-		   --command 'sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8443'
+	--command 'sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8443'
+
+attach_data_disk_gcp:
+	gcloud compute instances attach-disk $(GCP_VM) --disk=data --device-name=data --mode=rw
+
+detach_data_disk_gcp:
+	gcloud compute instances detach-disk $(GCP_VM_PREVIOUS) --disk=data || true
+
+set_tags_gcp:
+	gcloud compute instances remove-tags $(GCP_VM) --tags=http-server
+	gcloud compute instances add-tags $(GCP_VM) --tags=https-server
+
+wait:
+	sleep 12
+
+switch_gcp: stop_previous_gcp detach_data_disk_gcp attach_data_disk_gcp start_gcp wait ssl_redirect_gcp
 
 #-----------------------#
 
@@ -143,4 +164,6 @@ else
 endif
 
 GCP_VM = notebooks-vm
-GCP_CONTAINER = klt-notebooks-vm-cjme
+GCP_VM_PREVIOUS = notebooks-vm-2
+GCP_CONTAINER = klt-$(GCP_VM)-cjme
+GCP_CONTAINER_PREVIOUS = klt-$(GCP_VM_PREVIOUS)-woqb
