@@ -98,7 +98,7 @@ update_gcp:
 start_gcp:
 	gcloud compute instances start $(GCP_VM)
 
-setup_gcp: start_gcp wait ssl_redirect_gcp
+setup_gcp: start_gcp wait ssl_redirect_gcp update_ip_gcp_cf
 
 stop_gcp:
 	gcloud compute instances stop $(GCP_VM)
