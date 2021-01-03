@@ -3,6 +3,7 @@ zeromq
 sudo
 git
 gnuplot
+graphviz
 maxima
 python-pip
 npm
