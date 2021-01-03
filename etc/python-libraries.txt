@@ -12,7 +12,7 @@ git+https://github.com/jeffkaufman/icdiff.git
 ipywidgets
 jupyterlab_latex
 git+https://github.com/cameronraysmith/nbdev.git
-numpyro
+git+https://github.com/pyro-ppl/numpyro.git
 plotly
 pymc3
 nbdime
