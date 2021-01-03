@@ -25,10 +25,10 @@ RUN groupadd --gid=${NB_GID} ${NB_USER} && \
 
 
 # install jupyter
-RUN pip install wheel jupyter jupyterlab==2.2.9 jupyterlab-git jupyterlab_github nbgitpuller jupyterhub==1.1.0 jupytext RISE voila && \
-    jupyter serverextension enable --py jupyterlab --sys-prefix && \
-    jupyter labextension install @jupyterlab/toc @jupyterlab/github @jupyterlab/commenting-extension @jupyterlab/latex @jupyter-voila/jupyterlab-preview @aquirdturtle/collapsible_headings @arbennett/base16-nord @lckr/jupyterlab_variableinspector @bokeh/jupyter_bokeh jupyterlab-plotly jupyterlab-execute-time jupyterlab-skip-traceback transient-display-data jupyterlab-sos jupyterlab-topbar-extension jupyterlab-system-monitor && \
-    jupyter serverextension enable --py jupyterlab_git --sys-prefix
+RUN pip install wheel jupyter jupyterlab==2.2.9 jupyterlab-git jupyterlab_github nbgitpuller jupyterhub jupytext RISE voila jupyterlab-commenting-service && \
+     jupyter serverextension enable --py jupyterlab --sys-prefix && \
+     jupyter labextension install @jupyterlab/toc @jupyterlab/git @jupyterlab/github @jupyterlab/commenting-extension @jupyterlab/latex @jupyter-voila/jupyterlab-preview @aquirdturtle/collapsible_headings @arbennett/base16-nord @lckr/jupyterlab_variableinspector @bokeh/jupyter_bokeh jupyterlab-plotly jupyterlab-execute-time jupyterlab-skip-traceback transient-display-data jupyterlab-sos jupyterlab-topbar-extension jupyterlab-system-monitor && \
+     jupyter serverextension enable --py jupyterlab_git --sys-prefix
 
 RUN setcap 'CAP_NET_BIND_SERVICE=+eip' /usr/sbin/jupyter && \
     setcap 'CAP_NET_BIND_SERVICE=+eip' /usr/bin/jupyter
