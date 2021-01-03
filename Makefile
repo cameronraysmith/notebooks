@@ -95,6 +95,11 @@ update_gcp:
 	--container-arg="--NotebookApp.keyfile='/data/jovyan/certs/cf-key.pem'" \
 	--container-arg="--NotebookApp.notebook_dir='/data/jovyan/projects'"
 
+debug_container:
+	gcloud compute instances update-container $(GCP_VM) \
+	--container-command "/bin/sh" \
+	--clear-container-args
+
 start_gcp:
 	gcloud compute instances start $(GCP_VM)
 
@@ -111,6 +116,10 @@ ssh_gcp:
 
 ssh_container_gcp:
 	gcloud compute ssh $(GCP_VM) --container $(GCP_CONTAINER)
+
+update_container_image: start_gcp wait
+	gcloud compute ssh jovyan@$(GCP_VM) \
+	--command 'docker images && docker pull registry.hub.docker.com/$(DOCKER_IMAGE):latest && docker images'
 
 ssl_to_gcp:
 	gcloud compute scp --recurse etc/certs \
