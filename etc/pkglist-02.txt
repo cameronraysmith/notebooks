@@ -1,3 +1,4 @@
+cudnn
 dhclient
 e2fsprogs
 emacs

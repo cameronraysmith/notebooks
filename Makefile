@@ -1,4 +1,4 @@
-.PHONY=build srv restart sh clean kill docker_push docker_build build_output create_gcp update_gcp start_gcp setup_gcp stop_gcp stop_previous_gcp ssh_gcp ssh_container_gcp ssl_to_gcp ssl_redirect_gcp attach_data_disk_gcp detach_data_disk_gcp set_tags_gcp wait switch_gcp
+.PHONY=build srv restart sh clean kill docker_push docker_build build_output create_gcp update_gcp start_gcp setup_gcp stop_gcp stop_previous_gcp ssh_gcp ssh_container_gcp ssl_to_gcp ssl_redirect_gcp attach_data_disk_gcp detach_data_disk_gcp set_tags_gcp wait switch_gcp print_make_vars
 
 # Build Docker image
 # specify TYPE=dev to get builds based on Dockerfile.dev 
@@ -57,9 +57,9 @@ endif
 build_output:
 	@echo Docker Image: $(DOCKER_IMAGE):$(DOCKER_TAG)
 
-create_gcp:
+create_gcp: print_make_vars stop_previous_gcp detach_data_disk_gcp wait
 	gcloud compute instances create-with-container $(GCP_VM) \
-	--container-image registry.hub.docker.com/$(DOCKER_IMAGE):latest \
+	--container-image registry.hub.docker.com/$(DOCKER_IMAGE):$(DOCKER_TAG) \
 	--container-restart-policy on-failure \
 	--container-privileged \
 	--container-stdin \
@@ -69,18 +69,26 @@ create_gcp:
 	--container-arg="lab" \
 	--container-arg="--ip=0.0.0.0" \
 	--container-arg="--port=8443" \
-	--container-arg="--NotebookApp.ResourceUseDisplay.mem_limit=4026531840" \
-	--container-arg="--NotebookApp.ResourceUseDisplay.track_cpu_percent=True" \
-	--container-arg="--NotebookApp.ResourceUseDisplay.cpu_limit=1" \
 	--container-arg="--NotebookApp.allow_origin='*'" \
 	--container-arg="--NotebookApp.ip='*'" \
-	--container-arg="--NotebookApp.password=<type:salt:hashed-password>" \
-	--machine-type n1-standard-2 \
+	--container-arg="--NotebookApp.certfile='/data/jovyan/certs/cf-cert.pem'" \
+	--container-arg="--NotebookApp.keyfile='/data/jovyan/certs/cf-key.pem'" \
+	--container-arg="--NotebookApp.notebook_dir='/data/jovyan/projects'" \
+	--machine-type n1-standard-4 \
 	--boot-disk-size 50GB \
 	--disk auto-delete=no,boot=no,device-name=data,mode=rw,name=data \
 	--container-mount-disk mode=rw,mount-path=/data,name=data \
 	--tags=http-server,https-server \
-	--preemptible
+	--preemptible \
+	--accelerator count=1,type=nvidia-tesla-t4 \
+	--container-mount-host-path mount-path=/usr/local/nvidia/lib64,host-path=/var/lib/nvidia/lib64,mode=rw \
+	--container-mount-host-path mount-path=/usr/local/nvidia/bin,host-path=/var/lib/nvidia/bin,mode=rw \
+	--metadata-from-file startup-script=scripts/install-cos-gpu.sh \
+	--container-privileged
+	# --container-arg="--NotebookApp.password=<type:salt:hashed-password>"
+	# --container-arg="--NotebookApp.ResourceUseDisplay.mem_limit=4026531840" \
+	# --container-arg="--NotebookApp.ResourceUseDisplay.track_cpu_percent=True" \
+	# --container-arg="--NotebookApp.ResourceUseDisplay.cpu_limit=1"
 
 update_gcp:
 	gcloud compute instances update-container $(GCP_VM) \
@@ -90,10 +98,12 @@ update_gcp:
 	--container-arg="--port=8443" \
 	--container-arg="--NotebookApp.allow_origin='*'" \
 	--container-arg="--NotebookApp.ip='*'" \
-	--container-arg="--NotebookApp.password=<type:salt:hashed-password>" \
 	--container-arg="--NotebookApp.certfile='/data/jovyan/certs/cf-cert.pem'" \
 	--container-arg="--NotebookApp.keyfile='/data/jovyan/certs/cf-key.pem'" \
-	--container-arg="--NotebookApp.notebook_dir='/data/jovyan/projects'"
+	--container-arg="--NotebookApp.notebook_dir='/data/jovyan/projects'" \
+	--container-mount-host-path mount-path=/usr/local/nvidia/lib64,host-path=/var/lib/nvidia/lib64,mode=rw \
+	--container-mount-host-path mount-path=/usr/local/nvidia/bin,host-path=/var/lib/nvidia/bin,mode=rw \
+	--container-privileged
 
 debug_container:
 	gcloud compute instances update-container $(GCP_VM) \
@@ -106,10 +116,10 @@ start_gcp:
 setup_gcp: start_gcp wait ssl_redirect_gcp update_ip_gcp_cf
 
 stop_gcp:
-	gcloud compute instances stop $(GCP_VM)
+	gcloud compute instances stop $(GCP_VM) || true
 
 stop_previous_gcp:
-	gcloud compute instances stop $(GCP_VM_PREVIOUS)
+	gcloud compute instances stop $(GCP_VM_PREVIOUS) || true
 
 ssh_gcp:
 	gcloud compute ssh $(GCP_VM)
@@ -119,7 +129,7 @@ ssh_container_gcp:
 
 update_container_image: start_gcp wait
 	gcloud compute ssh jovyan@$(GCP_VM) \
-	--command 'docker images && docker pull registry.hub.docker.com/$(DOCKER_IMAGE):latest && docker images'
+	--command 'docker images && docker pull registry.hub.docker.com/$(DOCKER_IMAGE):$(DOCKER_TAG) && docker images'
 
 ssl_to_gcp:
 	gcloud compute scp --recurse etc/certs \
@@ -149,11 +159,20 @@ update_ip_gcp_cf:
 
 switch_gcp: stop_previous_gcp detach_data_disk_gcp attach_data_disk_gcp start_gcp wait ssl_redirect_gcp update_ip_gcp_cf
 
+print_make_vars:
+	$(info    DOCKER_IMAGE is $(DOCKER_IMAGE))
+	$(info    DOCKER_TAG is $(DOCKER_TAG))
+	$(info    GIT_COMMIT is $(GIT_COMMIT))
+	$(info    GCP_VM is $(GCP_VM))
+	$(info    GCP_VM_PREVIOUS is $(GCP_VM_PREVIOUS))
+	$(info    GCP_CONTAINER is $(GCP_CONTAINER))
+	$(info    GCP_CONTAINER_PREVIOUS is $(GCP_CONTAINER_PREVIOUS))
 
 #-----------------------#
 
 # Image can be overidden with an env var.
-DOCKER_IMAGE ?= cameronraysmith/notebooks
+DOCKER_IMAGE = cameronraysmith/notebooks
+DOCKER_TAG = develop
 
 # Get the latest commit.
 GIT_COMMIT = $(strip $(shell git rev-parse --short HEAD))
@@ -172,13 +191,13 @@ DOCKER_TAG_SUFFIX = -dirty
 endif
 
 # Add the commit sha and mark as dirty if the working directory isn't clean
-ifeq ($(TYPE),dev)
-	DOCKER_TAG = $(CODE_VERSION)-dev
-else
-	DOCKER_TAG = $(CODE_VERSION)-$(GIT_COMMIT)$(DOCKER_TAG_SUFFIX)
-endif
+# ifeq ($(TYPE),dev)
+# 	DOCKER_TAG = $(CODE_VERSION)-dev
+# else
+# 	DOCKER_TAG = $(CODE_VERSION)-$(GIT_COMMIT)$(DOCKER_TAG_SUFFIX)
+# endif
 
-GCP_VM = notebooks-vm
-GCP_VM_PREVIOUS = notebooks-vm-2
+GCP_VM = notebooks-gpu-vm
+GCP_VM_PREVIOUS = notebooks-gpu-vm
 GCP_CONTAINER = klt-$(GCP_VM)-cjme
 GCP_CONTAINER_PREVIOUS = klt-$(GCP_VM_PREVIOUS)-woqb
