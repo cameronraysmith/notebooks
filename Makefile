@@ -10,10 +10,10 @@ list:
 # gcp targets
 #------------------------
 
-setup_cpu_gcp: create_cpu_gcp wait \
+setup_cpu_gcp: check_cf_env_set create_cpu_gcp wait \
 ssl_redirect_gcp update_ip_gcp_cf
 
-setup_gpu_gcp: create_gpu_gcp \
+setup_gpu_gcp: check_cf_env_set create_gpu_gcp \
 wait_exist_vm wait_running_container \
 install_nvidia_container check_nvidia \
 ssl_redirect_gcp update_ip_gcp_cf \
@@ -31,7 +31,9 @@ create_cpu_gcp:
 	else \
 		echo "$(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
-	    --container-image registry.hub.docker.com/$(DOCKER_IMAGE):$(DOCKER_TAG) \
+		--image-project=gce-uefi-images \
+		--image-family=cos-stable \
+	    --container-image $(DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(DOCKER_TAG) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \
 	    --container-stdin \
@@ -61,7 +63,9 @@ create_gpu_gcp:
 	else \
 		echo "$(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
-	    --container-image registry.hub.docker.com/$(DOCKER_IMAGE):$(DOCKER_TAG) \
+		--image-project=gce-uefi-images \
+		--image-family=cos-stable \
+	    --container-image $(DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(DOCKER_TAG) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \
 	    --container-stdin \
@@ -119,7 +123,7 @@ ssh_container_gcp:
 
 update_container_image: start_gcp wait
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
-	--command 'docker images && docker pull registry.hub.docker.com/$(DOCKER_IMAGE):$(DOCKER_TAG) && docker images'
+	--command 'docker images && docker pull $(DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(DOCKER_TAG) && docker images'
 
 restart_container:
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
@@ -179,12 +183,23 @@ ssl_cert_copy_to_gcp:
 	gcloud compute scp --recurse etc/certs \
 	$(USER_NAME)@$(GCP_VM):/mnt/disks/gce-containers-mounts/gce-persistent-disks/data/jovyan
 
+check_cf_env_set:
+	@if [ -z "$$CF_API_KEY" ] || [ -z "$$CF_ZONE" ] || [ -z "$$CF_RECORD_ID" ] || [ -z "$$CF_EMAIL" ] || [ -z "$$CF_DOMAIN" ]; then \
+		echo "one or more variables required by scripts/cloudflare-update.sh are undefined";\
+		exit 1;\
+	else \
+		echo "cloudflare variables required by scripts/cloudflare-update.sh all defined";\
+    fi
+
 ssl_redirect_gcp:
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	--command 'sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8443'
 
-update_ip_gcp_cf:
+update_ip_gcp_cf: check_cf_env_set
 	scripts/cloudflare-update.sh $(GCP_IP) | json_pp
+
+cos_versions_gcp:
+	gcloud compute images list --project cos-cloud --no-standard-images
 
 set_tags_gcp:
 	gcloud compute instances remove-tags $(GCP_VM) --tags=http-server
@@ -198,7 +213,9 @@ wait:
 # Make variables
 #-----------------------#
 
+DOCKER_REGISTRY=registry.hub.docker.com
 DOCKER_USER=cameronraysmith
+
 DOCKER_CONTAINER=notebooks
 DOCKER_IMAGE=$(DOCKER_USER)/$(DOCKER_CONTAINER)
 DOCKER_TAG = develop
@@ -213,6 +230,7 @@ GCP_CONTAINER=$(shell gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docke
 USER_NAME=jovyan
 
 print_make_vars:
+	$(info    DOCKER_REGISTRY is $(DOCKER_REGISTRY))
 	$(info    DOCKER_IMAGE is $(DOCKER_IMAGE))
 	$(info    DOCKER_TAG is $(DOCKER_TAG))
 	$(info    GIT_COMMIT is $(GIT_COMMIT))

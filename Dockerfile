@@ -1,4 +1,4 @@
-FROM archlinux/base:latest
+FROM archlinux/archlinux:latest
 LABEL maintainer="Cameron Smith <cameron.ray.smith@gmail.com>"
 
 
@@ -118,10 +118,6 @@ RUN sudo chown ${NB_UID}:${NB_GID} ${HOME} && \
 
 COPY --chown=${NB_UID}:${NB_GID} ./etc/p10k.zsh ${HOME}/.p10k.zsh
 COPY --chown=${NB_UID}:${NB_GID} ./etc/jupyter_notebook_config.py ${HOME}/.jupyter
-
-# copy home directory to tmp for restoration
-RUN mkdir -p /tmp/homedir && \
-    cp -a ${HOME}/. /tmp/homedir/
 
 
 # Metadata
