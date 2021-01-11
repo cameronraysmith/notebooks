@@ -31,7 +31,7 @@ create_cpu_gcp:
 	else \
 		echo "$(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
-	    --container-image registry.hub.docker.com/$(DOCKER_IMAGE):$(DOCKER_TAG) \
+	    --container-image $(DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(DOCKER_TAG) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \
 	    --container-stdin \
@@ -61,7 +61,7 @@ create_gpu_gcp:
 	else \
 		echo "$(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
-	    --container-image registry.hub.docker.com/$(DOCKER_IMAGE):$(DOCKER_TAG) \
+	    --container-image $(DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(DOCKER_TAG) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \
 	    --container-stdin \
@@ -119,7 +119,7 @@ ssh_container_gcp:
 
 update_container_image: start_gcp wait
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
-	--command 'docker images && docker pull registry.hub.docker.com/$(DOCKER_IMAGE):$(DOCKER_TAG) && docker images'
+	--command 'docker images && docker pull $(DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(DOCKER_TAG) && docker images'
 
 restart_container:
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
@@ -198,7 +198,9 @@ wait:
 # Make variables
 #-----------------------#
 
+DOCKER_REGISTRY=registry.hub.docker.com
 DOCKER_USER=cameronraysmith
+
 DOCKER_CONTAINER=notebooks
 DOCKER_IMAGE=$(DOCKER_USER)/$(DOCKER_CONTAINER)
 DOCKER_TAG = develop
@@ -213,6 +215,7 @@ GCP_CONTAINER=$(shell gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docke
 USER_NAME=jovyan
 
 print_make_vars:
+	$(info    DOCKER_REGISTRY is $(DOCKER_REGISTRY))
 	$(info    DOCKER_IMAGE is $(DOCKER_IMAGE))
 	$(info    DOCKER_TAG is $(DOCKER_TAG))
 	$(info    GIT_COMMIT is $(GIT_COMMIT))
