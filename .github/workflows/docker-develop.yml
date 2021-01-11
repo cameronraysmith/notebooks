@@ -39,6 +39,9 @@ jobs:
           username: _json_key
           password: ${{ secrets.GCR_JSON_KEY }}
       -
+        name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+      -
         name: Build and push
         uses: docker/build-push-action@v2
         with:
