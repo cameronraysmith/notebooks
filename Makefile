@@ -1,4 +1,7 @@
 .PHONY: list
+
+# https://stackoverflow.com/a/26339924/
+# How do you get the list of targets in a makefile?
 list:
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
 
@@ -7,17 +10,22 @@ list:
 # gcp targets
 #------------------------
 
-setup_cpu_gcp: start_gcp wait ssl_redirect_gcp update_ip_gcp_cf
+setup_cpu_gcp: create_cpu_gcp wait \
+ssl_redirect_gcp update_ip_gcp_cf
 
-setup_gpu_gcp: start_gcp wait install_nvidia_container check_nvidia ssl_redirect_gcp update_ip_gcp_cf
+setup_gpu_gcp: create_gpu_gcp \
+wait_exist_vm wait_running_container \
+install_nvidia_container check_nvidia \
+ssl_redirect_gcp update_ip_gcp_cf \
+restart_container
 
 delete_previous_gcp: print_make_vars stop_previous_gcp detach_data_disk_gcp
-	gcloud compute instances delete $(GCP_VM_PREVIOUS) || true
+	gcloud compute instances delete --quiet $(GCP_VM_PREVIOUS) || true
 
 switch_gcp: stop_previous_gcp detach_data_disk_gcp attach_data_disk_gcp start_gcp wait ssl_redirect_gcp update_ip_gcp_cf
 
 create_cpu_gcp:
-	@if [ $(CHECK_VM) = $(GCP_VM) ]; then\
+	@if [ "$(CHECK_VM)" = "$(GCP_VM)" ]; then\
 		echo "$(GCP_VM) already exists; proceeding to start" ;\
 		gcloud compute instances start $(GCP_VM) ;\
 	else \
@@ -47,7 +55,7 @@ create_cpu_gcp:
 	fi
 
 create_gpu_gcp:
-	@if [ $(CHECK_VM) = $(GCP_VM) ]; then\
+	@if [ "$(CHECK_VM)" = "$(GCP_VM)" ]; then\
 		echo "$(GCP_VM) already exists; proceeding to start" ;\
 		gcloud compute instances start $(GCP_VM) ;\
 	else \
@@ -113,6 +121,10 @@ update_container_image: start_gcp wait
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	--command 'docker images && docker pull registry.hub.docker.com/$(DOCKER_IMAGE):$(DOCKER_TAG) && docker images'
 
+restart_container:
+	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	--command 'docker restart $(GCP_CONTAINER)'
+
 debug_container:
 	gcloud compute instances update-container $(GCP_VM) \
 	--container-command "/bin/sh" \
@@ -127,10 +139,25 @@ detach_data_disk_gcp:
 check_exist_vm:
 	@if [ $(CHECK_VM) = $(GCP_VM) ]; then\
 		echo "$(GCP_VM) already exists" ;\
-		echo "This is a test" ;\
 	else \
 		echo "$(GCP_VM) DOES NOT exist" ;\
 	fi
+
+wait_exist_vm:
+	@while [ "$$VM" != "$(GCP_VM)" ]; do\
+		echo "waiting for $(GCP_VM)" ;\
+		sleep 5 ;\
+		VM=`gcloud compute instances list --filter="name=$(GCP_VM)" | grep -o $(GCP_VM)` ;\
+	done ;\
+	echo "$(GCP_VM) is now available"
+
+wait_running_container:
+	@while [ "$$CONTAINER" = "" ]; do \
+		echo "waiting for container" ;\
+		sleep 5 ;\
+		CONTAINER=`gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps | grep $(GCP_VM) | cut -d' ' -f1"` ;\
+	done ;\
+	echo "container with ID $$CONTAINER is now available"
 
 install_nvidia_container:
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
@@ -171,6 +198,20 @@ wait:
 # Make variables
 #-----------------------#
 
+DOCKER_USER=cameronraysmith
+DOCKER_CONTAINER=notebooks
+DOCKER_IMAGE=$(DOCKER_USER)/$(DOCKER_CONTAINER)
+DOCKER_TAG = develop
+
+GIT_COMMIT = $(strip $(shell git rev-parse --short HEAD))
+
+GCP_VM=notebooks-gpu-vm
+CHECK_VM=$(shell gcloud compute instances list --filter="name=$(GCP_VM)" | grep -o $(GCP_VM))
+GCP_VM_PREVIOUS=notebooks-gpu-vm
+GCP_IP=$(shell gcloud compute instances describe $(GCP_VM) --format="get(networkInterfaces[0].accessConfigs[0].natIP)")
+GCP_CONTAINER=$(shell gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps | grep $(GCP_VM) | cut -d' ' -f1")
+USER_NAME=jovyan
+
 print_make_vars:
 	$(info    DOCKER_IMAGE is $(DOCKER_IMAGE))
 	$(info    DOCKER_TAG is $(DOCKER_TAG))
@@ -181,20 +222,6 @@ print_make_vars:
 	$(info    GCP_IP is $(GCP_IP))
 	$(info    GCP_VM_PREVIOUS is $(GCP_VM_PREVIOUS))
 	$(info    GCP_CONTAINER is $(GCP_CONTAINER))
-
-DOCKER_USER=cameronraysmith
-DOCKER_CONTAINER=notebooks
-DOCKER_IMAGE=$(DOCKER_USER)/$(DOCKER_CONTAINER)
-DOCKER_TAG = develop
-
-GIT_COMMIT = $(strip $(shell git rev-parse --short HEAD))
-
-GCP_VM=notebooks-gpu-vm
-CHECK_VM:=$(shell gcloud compute instances list --filter="name=$(GCP_VM)" | grep -o $(GCP_VM))
-GCP_VM_PREVIOUS=notebooks-gpu-vm
-GCP_IP:=$(shell gcloud compute instances describe $(GCP_VM) --format="get(networkInterfaces[0].accessConfigs[0].natIP)")
-GCP_CONTAINER:=$(shell gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps | grep $(GCP_VM) | cut -d' ' -f1")
-USER_NAME=jovyan
 
 # Get the version number from the code
 CODE_VERSION = $(strip $(shell cat VERSION))
