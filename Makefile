@@ -10,10 +10,10 @@ list:
 # gcp targets
 #------------------------
 
-setup_cpu_gcp: create_cpu_gcp wait \
+setup_cpu_gcp: check_cf_env_set create_cpu_gcp wait \
 ssl_redirect_gcp update_ip_gcp_cf
 
-setup_gpu_gcp: create_gpu_gcp \
+setup_gpu_gcp: check_cf_env_set create_gpu_gcp \
 wait_exist_vm wait_running_container \
 install_nvidia_container check_nvidia \
 ssl_redirect_gcp update_ip_gcp_cf \
@@ -183,11 +183,19 @@ ssl_cert_copy_to_gcp:
 	gcloud compute scp --recurse etc/certs \
 	$(USER_NAME)@$(GCP_VM):/mnt/disks/gce-containers-mounts/gce-persistent-disks/data/jovyan
 
+check_cf_env_set:
+	@if [ -z "$$CF_API_KEY" ] || [ -z "$$CF_ZONE" ] || [ -z "$$CF_RECORD_ID" ] || [ -z "$$CF_EMAIL" ] || [ -z "$$CF_DOMAIN" ]; then \
+		echo "one or more variables required by scripts/cloudflare-update.sh are undefined";\
+		exit 1;\
+	else \
+		echo "cloudflare variables required by scripts/cloudflare-update.sh all defined";\
+    fi
+
 ssl_redirect_gcp:
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	--command 'sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8443'
 
-update_ip_gcp_cf:
+update_ip_gcp_cf: check_cf_env_set
 	scripts/cloudflare-update.sh $(GCP_IP) | json_pp
 
 cos_versions_gcp:
