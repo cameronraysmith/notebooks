@@ -31,6 +31,8 @@ create_cpu_gcp:
 	else \
 		echo "$(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
+		--image-project=gce-uefi-images \
+		--image-family=cos-stable \
 	    --container-image $(DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(DOCKER_TAG) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \
@@ -61,6 +63,8 @@ create_gpu_gcp:
 	else \
 		echo "$(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
+		--image-project=gce-uefi-images \
+		--image-family=cos-stable \
 	    --container-image $(DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(DOCKER_TAG) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \
@@ -185,6 +189,9 @@ ssl_redirect_gcp:
 
 update_ip_gcp_cf:
 	scripts/cloudflare-update.sh $(GCP_IP) | json_pp
+
+cos_versions_gcp:
+	gcloud compute images list --project cos-cloud --no-standard-images
 
 set_tags_gcp:
 	gcloud compute instances remove-tags $(GCP_VM) --tags=http-server
