@@ -1,4 +1,4 @@
-FROM archlinux/base:latest
+FROM archlinux/archlinux:latest
 LABEL maintainer="Cameron Smith <cameron.ray.smith@gmail.com>"
 
 
