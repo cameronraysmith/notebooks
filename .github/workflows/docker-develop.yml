@@ -41,8 +41,6 @@ jobs:
       -
         name: Build and push
         uses: docker/build-push-action@v2
-        env:
-          GCR_PROJECT_ID: ${{ secrets.GCR_PROJECT_ID }}
         with:
           context: .
           file: ./Dockerfile
@@ -51,4 +49,4 @@ jobs:
           tags: |
             cameronraysmith/notebooks:develop
             ghcr.io/cameronraysmith/notebooks:develop
-            gcr.io/$GCR_PROJECT_ID/notebooks:develop
+            gcr.io/${{ secrets.GCR_PROJECT_ID }}/notebooks:develop
