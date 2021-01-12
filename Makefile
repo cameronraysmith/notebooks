@@ -14,8 +14,9 @@ setup_cpu_gcp: check_cf_env_set create_cpu_gcp wait \
 ssl_redirect_gcp update_ip_gcp_cf
 
 setup_gpu_gcp: check_cf_env_set create_gpu_gcp \
-wait_exist_vm wait_running_container \
+wait_exist_vm wait wait_running_container \
 install_nvidia_container check_nvidia \
+install_pyro_container \
 ssl_redirect_gcp update_ip_gcp_cf \
 restart_container
 
@@ -26,14 +27,14 @@ switch_gcp: stop_previous_gcp detach_data_disk_gcp attach_data_disk_gcp start_gc
 
 create_cpu_gcp:
 	@if [ "$(CHECK_VM)" = "$(GCP_VM)" ]; then\
-		echo "$(GCP_VM) already exists; proceeding to start" ;\
+		echo "* $(GCP_VM) already exists; proceeding to start" ;\
 		gcloud compute instances start $(GCP_VM) ;\
 	else \
-		echo "$(GCP_VM) DOES NOT exist; proceeding with creation" ;\
+		echo "* $(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
 		--image-project=gce-uefi-images \
 		--image-family=cos-stable \
-	    --container-image $(DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(DOCKER_TAG) \
+	    --container-image $(DOCKER_URL) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \
 	    --container-stdin \
@@ -58,14 +59,14 @@ create_cpu_gcp:
 
 create_gpu_gcp:
 	@if [ "$(CHECK_VM)" = "$(GCP_VM)" ]; then\
-		echo "$(GCP_VM) already exists; proceeding to start" ;\
+		echo "* $(GCP_VM) already exists; proceeding to start" ;\
 		gcloud compute instances start $(GCP_VM) ;\
 	else \
-		echo "$(GCP_VM) DOES NOT exist; proceeding with creation" ;\
+		echo "* $(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
 		--image-project=gce-uefi-images \
 		--image-family=cos-stable \
-	    --container-image $(DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(DOCKER_TAG) \
+	    --container-image $(DOCKER_URL) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \
 	    --container-stdin \
@@ -123,7 +124,7 @@ ssh_container_gcp:
 
 update_container_image: start_gcp wait
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
-	--command 'docker images && docker pull $(DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(DOCKER_TAG) && docker images'
+	--command 'docker images && docker pull $(DOCKER_URL) && docker images'
 
 restart_container:
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
@@ -142,42 +143,48 @@ detach_data_disk_gcp:
 
 check_exist_vm:
 	@if [ $(CHECK_VM) = $(GCP_VM) ]; then\
-		echo "$(GCP_VM) already exists" ;\
+		echo "* $(GCP_VM) already exists" ;\
 	else \
-		echo "$(GCP_VM) DOES NOT exist" ;\
+		echo "* $(GCP_VM) DOES NOT exist" ;\
 	fi
 
 wait_exist_vm:
 	@while [ "$$VM" != "$(GCP_VM)" ]; do\
-		echo "waiting for $(GCP_VM)" ;\
+		echo "* waiting for $(GCP_VM)" ;\
 		sleep 5 ;\
 		VM=`gcloud compute instances list --filter="name=$(GCP_VM)" | grep -o $(GCP_VM)` ;\
 	done ;\
-	echo "$(GCP_VM) is now available"
+	echo "* $(GCP_VM) is now available"
 
 wait_running_container:
-	@while [ "$$CONTAINER" = "" ]; do \
-		echo "waiting for container" ;\
+	@while [ "$$CONTAINER_IMAGE" != "$(DOCKER_URL)" ]; do \
+		echo "* waiting for container" ;\
 		sleep 5 ;\
-		CONTAINER=`gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps | grep $(GCP_VM) | cut -d' ' -f1"` ;\
+		CONTAINER_IMAGE=`gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_URL)' --format '{{.Image}}'"` ;\
 	done ;\
-	echo "container with ID $$CONTAINER is now available"
+	CONTAINER_ID=`gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_URL)' --format '{{.ID}}'"` ;\
+	echo "* container $$CONTAINER_ID for image $$CONTAINER_IMAGE is now available"
 
 install_nvidia_container:
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	--command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
 			export LD_LIBRARY_PATH=/usr/local/nvidia/lib64 && \
-			pacman -Sy --needed --noconfirm cudnn && \
-			pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html && \
-			pip install pyro-ppl'"
+			pacman -Sy --needed --noconfirm cudnn'"
 
 check_nvidia:
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	--command "docker exec -u 0 $(GCP_CONTAINER) sh -c 'LD_LIBRARY_PATH=/usr/local/nvidia/lib64 /usr/local/nvidia/bin/nvidia-smi'"
 
+install_pyro_container:
+	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	--command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
+			export LD_LIBRARY_PATH=/usr/local/nvidia/lib64 && \
+			pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html && \
+			pip install pyro-ppl'"
+
 get_container_id:
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
-	--command "docker ps | grep notebooks | cut -d' ' -f1"
+	--command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_URL)' --format '{{.ID}}'"
 
 ssl_cert_copy_to_gcp:
 	gcloud compute scp --recurse etc/certs \
@@ -185,10 +192,10 @@ ssl_cert_copy_to_gcp:
 
 check_cf_env_set:
 	@if [ -z "$$CF_API_KEY" ] || [ -z "$$CF_ZONE" ] || [ -z "$$CF_RECORD_ID" ] || [ -z "$$CF_EMAIL" ] || [ -z "$$CF_DOMAIN" ]; then \
-		echo "one or more variables required by scripts/cloudflare-update.sh are undefined";\
+		echo "* one or more variables required by scripts/cloudflare-update.sh are undefined";\
 		exit 1;\
 	else \
-		echo "cloudflare variables required by scripts/cloudflare-update.sh all defined";\
+		echo "* cloudflare variables required by scripts/cloudflare-update.sh all defined";\
     fi
 
 ssl_redirect_gcp:
@@ -206,7 +213,8 @@ set_tags_gcp:
 	gcloud compute instances add-tags $(GCP_VM) --tags=https-server
 
 wait:
-	sleep 30
+	echo "* pausing for 30 seconds"
+	@sleep 30
 
 
 #-----------------------#
@@ -218,7 +226,8 @@ DOCKER_USER=cameronraysmith
 
 DOCKER_CONTAINER=notebooks
 DOCKER_IMAGE=$(DOCKER_USER)/$(DOCKER_CONTAINER)
-DOCKER_TAG = develop
+DOCKER_TAG=develop
+DOCKER_URL=$(DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(DOCKER_TAG)
 
 GIT_COMMIT = $(strip $(shell git rev-parse --short HEAD))
 
@@ -226,7 +235,8 @@ GCP_VM=notebooks-gpu-vm
 CHECK_VM=$(shell gcloud compute instances list --filter="name=$(GCP_VM)" | grep -o $(GCP_VM))
 GCP_VM_PREVIOUS=notebooks-gpu-vm
 GCP_IP=$(shell gcloud compute instances describe $(GCP_VM) --format="get(networkInterfaces[0].accessConfigs[0].natIP)")
-GCP_CONTAINER=$(shell gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps | grep $(GCP_VM) | cut -d' ' -f1")
+GCP_CONTAINER=$(shell gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_URL)' --format '{{.ID}}'")
+
 USER_NAME=jovyan
 
 print_make_vars:
