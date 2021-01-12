@@ -213,7 +213,8 @@ set_tags_gcp:
 	gcloud compute instances add-tags $(GCP_VM) --tags=https-server
 
 wait:
-	sleep 30
+	echo "* pausing for 30 seconds"
+	@sleep 30
 
 
 #-----------------------#
@@ -234,7 +235,8 @@ GCP_VM=notebooks-gpu-vm
 CHECK_VM=$(shell gcloud compute instances list --filter="name=$(GCP_VM)" | grep -o $(GCP_VM))
 GCP_VM_PREVIOUS=notebooks-gpu-vm
 GCP_IP=$(shell gcloud compute instances describe $(GCP_VM) --format="get(networkInterfaces[0].accessConfigs[0].natIP)")
-GCP_CONTAINER=$(shell gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps | grep $(GCP_VM) | cut -d' ' -f1")
+GCP_CONTAINER=$(shell gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_URL)' --format '{{.ID}}'")
+
 USER_NAME=jovyan
 
 print_make_vars:
