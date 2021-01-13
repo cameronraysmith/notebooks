@@ -84,7 +84,9 @@ Note that the `$` in the salted, hashed password have to be escaped as `\$$`.
 It is assumed that data will be managed via a persistent disk named `$DATA_DISK` that will be attached in read-write mode to one running instance at a time. If you would like to run multiple instances of this container at the same time, you will need to account for the need to create multiple persistent disks.
 
 #### Cloudflare
-This section is only relevant if you would like to access the jupyter notebook server at a custom domain via SSL. Cloudflare is used for [managing CA certificates](https://support.cloudflare.com/hc/en-us/articles/115000479507). See the variables required by [scripts/cloudflare-update.sh](scripts/cloudflare-update.sh) and checked by the Make target `check_cf_env_set` to setup the environment as necessary.
+This section is only relevant if you would like to access the jupyter notebook server at a custom domain via SSL. Cloudflare is used for [managing Origin CA certificates](https://support.cloudflare.com/hc/en-us/articles/115000479507). See the variables required by [scripts/cloudflare-update.sh](scripts/cloudflare-update.sh) and checked by the Make target `check_cf_env_set` to setup the environment as necessary.
+
+Once you have created the `cf-cert.pem` and `cf-key.pem` files, place them at `./etc/certs`. The Make target `ssl_cert_copy_to_gcp` can then be used to copy them to the [data persistent disk](#data). So long as this disk is maintained and the certificates remain valid, this process should not need to be repeated. Of course, anyone who gains access to this disk will be able to read the contents of the certificates unless additional security measures are taken. 
 
 ## file listing
 
