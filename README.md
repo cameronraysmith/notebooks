@@ -59,6 +59,26 @@ projectNumber: '<project number>'
 
 Once the Google Cloud SDK is configured, follow the list of Make targets that proceed from `setup_gcp` in the [Makefile](Makefile).
 
+##### jupyter notebook security
+
+If you would only like to implement password-based authentication, you will need to follow the instructions in the jupyter notebook documentation for [Preparing a hashed password](https://jupyter-notebook.readthedocs.io/en/stable/public_server.html#preparing-a-hashed-password). You can then edit the relevant lines in the [Makefile](Makefile). The password in the git history (`%HfuQRa@X%9&8MxM`) should obviously be treated as compromised. You can generate the associated salted, hashed password in python
+
+```python
+from notebook.auth import passwd
+passwd()
+Enter password: %HfuQRa@X%9&8MxM
+Verify password: %HfuQRa@X%9&8MxM
+'argon2:$argon2id$v=19$m=10240,t=10,p=8$hQQSNsDLkgTth1v7IjN4Ig$G+O1EfHDdKq/hOZUODBnQA'
+```
+
+This is the origin of the following lines in the [Makefile](Makefile):
+
+``` bash
+--container-arg="--NotebookApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
+```
+
+Note that the `$` in the salted, hashed password have to be escaped as `\$$`.
+
 ##### data
 
 It is assumed that data will be managed via a persistent disk named `$DATA_DISK` that will be attached in read-write mode to one running instance at a time. If you would like to run multiple instances of this container at the same time, you will need to account for the need to create multiple persistent disks.

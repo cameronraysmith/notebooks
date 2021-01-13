@@ -96,6 +96,7 @@ create_gcp:
 	    --container-arg="--NotebookApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
 	    --container-arg="--NotebookApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
 	    --container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/projects'" \
+		--container-arg="--NotebookApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
 	    --machine-type n1-standard-4 \
 	    --boot-disk-size 200GB \
 	    --disk auto-delete=no,boot=no,device-name=$(DATA_DISK),mode=rw,name=$(DATA_DISK) \
@@ -122,6 +123,7 @@ create_gcp:
 	    --container-arg="--NotebookApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
 	    --container-arg="--NotebookApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
 	    --container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/projects'" \
+		--container-arg="--NotebookApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
 	    --machine-type n1-standard-4 \
 	    --boot-disk-size 200GB \
 	    --disk auto-delete=no,boot=no,device-name=$(DATA_DISK),mode=rw,name=$(DATA_DISK) \
@@ -161,6 +163,7 @@ create_cpu_gcp:
 	    --container-arg="--NotebookApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
 	    --container-arg="--NotebookApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
 	    --container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/projects'" \
+		--container-arg="--NotebookApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
 	    --machine-type n1-standard-4 \
 	    --boot-disk-size 200GB \
 	    --disk auto-delete=no,boot=no,device-name=$(DATA_DISK),mode=rw,name=$(DATA_DISK) \
@@ -193,6 +196,7 @@ create_gpu_gcp:
 	    --container-arg="--NotebookApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
 	    --container-arg="--NotebookApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
 	    --container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/projects'" \
+		--container-arg="--NotebookApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
 	    --machine-type n1-standard-4 \
 	    --boot-disk-size 200GB \
 	    --disk auto-delete=no,boot=no,device-name=$(DATA_DISK),mode=rw,name=$(DATA_DISK) \
@@ -216,6 +220,7 @@ update_gcp:
 	--container-arg="--NotebookApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
 	--container-arg="--NotebookApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
 	--container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/projects'" \
+	--container-arg="--NotebookApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
 	--container-mount-host-path mount-path=/usr/local/nvidia/lib64,host-path=/var/lib/nvidia/lib64,mode=rw \
 	--container-mount-host-path mount-path=/usr/local/nvidia/bin,host-path=/var/lib/nvidia/bin,mode=rw
 
