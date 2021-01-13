@@ -9,7 +9,23 @@ This is a [Docker][] configuration for running [jupyter][] || [lab][] with kerne
 See the [Makefile](Makefile) for relevant commands.
 
 ## container images
+
+### images
 Images are available from [Docker hub](https://hub.docker.com/r/cameronraysmith/notebooks) and [GitHub Container Registry](https://ghcr.io/cameronraysmith/notebooks).
+
+### contents
+
+In addition to the jupyter kernels listed in the [about](#about) section, the following software is installed by the [Dockerfile](Dockerfile)
+
+* [arch linux packages](https://archlinux.org/packages/) listed in [etc/pkglist-01.txt](etc/pkglist-01.txt) and [etc/pkglist-02.txt](etc/pkglist-02.txt)
+* [yay](https://aur.archlinux.org/packages/yay/) AUR helper
+* [jupyter lab](https://jupyterlab.readthedocs.io/en/stable/) dependencies along with a number of jupyter lab extensions and their dependencies (not listed here as this is going to change soon with an upgrade to jupyter lab `>=3.0`). A default configuration is in [etc/jupyter_notebook_config.py](etc/jupyter_notebook_config.py), which may be overridden by supplying container arguments in the [cloud](#jupyter-notebook-security) setup.
+* [python](https://github.com/python) packages listed in [etc/python-libraries.txt](etc/python-libraries.txt) 
+* [julia](https://github.com/JuliaLang/IJulia.jl) packages listed in [etc/Project.toml](etc/Project.toml)
+* [thoughtbot/rcm](https://github.com/thoughtbot/rcm) and [thoughtbot/dotfiles](https://github.com/thoughtbot/dotfiles)
+* [zsh](https://www.zsh.org/) and [ohmyzsh](https://github.com/ohmyzsh/ohmyzsh)
+* [romkatv/powerlevel10k](https://github.com/romkatv/powerlevel10k) with default configuration in [etc/p10k.zsh](etc/p10k.zsh)
+* [hlissner/doom-emacs](https://github.com/hlissner/doom-emacs)
 
 ## setup
 
