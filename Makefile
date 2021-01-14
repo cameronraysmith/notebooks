@@ -16,17 +16,33 @@ DOCKER_USER=cameronraysmith
 DOCKER_CONTAINER=notebooks
 PROCESSOR_MODE=gpu
 DOCKER_TAG=latest
+# DOCKER_TAG=develop
 USER_NAME=jovyan
-GCP_VM_PREVIOUS=notebooks-gpu-latest
-DATA_DISK=data
+NOTEBOOKS_DIR=projects
+
+GCP_MACHINE_TYPE=n1-standard-4
+GCP_ACCELERATOR_TYPE=nvidia-tesla-t4
+GCP_ACCELERATOR_COUNT=1
+
+# DATA_DISK=data
+# DATA_DISK=data-test
+DATA_DISK=data-insecure
 DATA_DISK_SIZE=50GB
+
+BOOT_DISK_SIZE=200GB
+
+JUPYTER_PORT=8443
+# EXTERNAL_PORT=443
+EXTERNAL_PORT=80
+
+GCP_VM_PREVIOUS=$(GCP_VM)
 
 # e.g. cameronraysmith/notebooks
 DOCKER_IMAGE=$(DOCKER_USER)/$(DOCKER_CONTAINER)
 # e.g. registry.hub.docker.com/cameronraysmith/notebooks:latest
 DOCKER_URL=$(DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(DOCKER_TAG)
 # e.g. notebooks-gpu-latest
-GCP_VM=$(DOCKER_CONTAINER)-$(PROCESSOR_MODE)-$(DOCKER_TAG)
+GCP_VM=$(DOCKER_CONTAINER)-$(DOCKER_TAG)-$(PROCESSOR_MODE)-$(EXTERNAL_PORT)-$(DATA_DISK)
 CHECK_VM=$(shell gcloud compute instances list --filter="name=$(GCP_VM)" | grep -o $(GCP_VM))
 CHECK_DATA_DISK=$(shell gcloud compute disks list --filter="name=$(DATA_DISK)" | grep -o $(DATA_DISK))
 GCP_IP=$(shell gcloud compute instances describe $(GCP_VM) --format="get(networkInterfaces[0].accessConfigs[0].natIP)")
@@ -39,38 +55,76 @@ CODE_VERSION = $(strip $(shell cat VERSION))
 # gcp targets
 #------------------------
 
-setup_cpu_gcp: check_cf_env_set create_data_disk \
-create_cpu_gcp \
-wait \
-ssl_redirect_gcp update_ip_gcp_cf
-
-setup_gpu_gcp: check_cf_env_set create_data_disk \
-create_gpu_gcp \
-wait_exist_vm wait wait_running_container \
-install_nvidia_container check_nvidia \
-install_pyro_container \
-ssl_redirect_gcp update_ip_gcp_cf \
-restart_container
-
-setup_gcp: check_cf_env_set create_data_disk \
+initialize_gcp_insecure: \
+create_data_disk \
 create_gcp \
-wait_exist_vm wait wait_running_container \
-install_nvidia_container check_nvidia \
+wait_exist_vm \
+wait_1 \
+wait_running_container \
+create_notebooks_dir_gcp \
+update_gcp_insecure \
+wait_2 \
+wait_running_container_2 \
+install_nvidia_container \
+check_nvidia \
 install_pyro_container \
-ssl_redirect_gcp update_ip_gcp_cf \
-restart_container
+external_port_redirect_gcp \
+restart_container_1
+
+startup_gcp_insecure: \
+create_gcp \
+wait_exist_vm \
+wait_1 \
+wait_running_container \
+install_nvidia_container \
+check_nvidia \
+install_pyro_container \
+external_port_redirect_gcp \
+restart_container_1
+
+initialize_gcp_secure: \
+check_cf_env_set \
+create_data_disk \
+create_gcp \
+wait_exist_vm \
+wait_1 \
+wait_running_container \
+create_notebooks_dir_gcp \
+ssl_cert_copy_to_gcp \
+restart_container_1 \
+wait_2 \
+install_nvidia_container \
+check_nvidia \
+install_pyro_container \
+external_port_redirect_gcp \
+update_ip_gcp_cf \
+restart_container_2
+
+startup_gcp_secure: \
+check_cf_env_set \
+create_gcp \
+wait_exist_vm \
+wait_1 \
+wait_running_container \
+install_nvidia_container \
+check_nvidia \
+install_pyro_container \
+external_port_redirect_gcp \
+update_ip_gcp_cf \
+restart_container_1
+
 
 delete_previous_gcp: print_make_vars stop_previous_gcp detach_data_disk_gcp
 	gcloud compute instances delete --quiet $(GCP_VM_PREVIOUS)
 
 create_data_disk:
 	@if [ "$(CHECK_DATA_DISK)" = "$(DATA_DISK)" ]; then\
-		echo "* A disk named \"$(DATA_DISK)\" already exists" ;\
+		echo "* a disk named \"$(DATA_DISK)\" already exists" ;\
 	else \
 		gcloud compute disks create $(DATA_DISK) --size=$(DATA_DISK_SIZE);\
 	fi
 
-switch_gcp: stop_previous_gcp detach_data_disk_gcp attach_data_disk_gcp start_gcp wait ssl_redirect_gcp update_ip_gcp_cf
+switch_gcp: stop_previous_gcp detach_data_disk_gcp attach_data_disk_gcp start_gcp wait_1 external_port_redirect_gcp update_ip_gcp_cf
 
 create_gcp:
 	@if [ "$(CHECK_VM)" = "$(GCP_VM)" ]; then \
@@ -90,15 +144,15 @@ create_gcp:
 	    --container-command "jupyter" \
 	    --container-arg="lab" \
 	    --container-arg="--ip=0.0.0.0" \
-	    --container-arg="--port=8443" \
+	    --container-arg="--port=$(JUPYTER_PORT)" \
 	    --container-arg="--NotebookApp.allow_origin='*'" \
 	    --container-arg="--NotebookApp.ip='*'" \
 	    --container-arg="--NotebookApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
 	    --container-arg="--NotebookApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
-	    --container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/projects'" \
 		--container-arg="--NotebookApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
-	    --machine-type n1-standard-4 \
-	    --boot-disk-size 200GB \
+	    --container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
+	    --machine-type $(GCP_MACHINE_TYPE) \
+	    --boot-disk-size $(BOOT_DISK_SIZE) \
 	    --disk auto-delete=no,boot=no,device-name=$(DATA_DISK),mode=rw,name=$(DATA_DISK) \
 	    --container-mount-disk mode=rw,mount-path=/$(DATA_DISK),name=$(DATA_DISK) \
 	    --tags=http-server,https-server \
@@ -117,20 +171,20 @@ create_gcp:
 	    --container-command "jupyter" \
 	    --container-arg="lab" \
 	    --container-arg="--ip=0.0.0.0" \
-	    --container-arg="--port=8443" \
+	    --container-arg="--port=$(JUPYTER_PORT)" \
 	    --container-arg="--NotebookApp.allow_origin='*'" \
 	    --container-arg="--NotebookApp.ip='*'" \
 	    --container-arg="--NotebookApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
 	    --container-arg="--NotebookApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
-	    --container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/projects'" \
 		--container-arg="--NotebookApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
-	    --machine-type n1-standard-4 \
-	    --boot-disk-size 200GB \
+	    --container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
+	    --machine-type $(GCP_MACHINE_TYPE) \
+	    --boot-disk-size $(BOOT_DISK_SIZE) \
 	    --disk auto-delete=no,boot=no,device-name=$(DATA_DISK),mode=rw,name=$(DATA_DISK) \
 	    --container-mount-disk mode=rw,mount-path=/$(DATA_DISK),name=$(DATA_DISK) \
 	    --tags=http-server,https-server \
 	    --preemptible \
-	    --accelerator count=1,type=nvidia-tesla-t4 \
+	    --accelerator count=$(GCP_ACCELERATOR_COUNT),type=$(GCP_ACCELERATOR_TYPE) \
 	    --container-mount-host-path mount-path=/usr/local/nvidia/lib64,host-path=/var/lib/nvidia/lib64,mode=rw \
 	    --container-mount-host-path mount-path=/usr/local/nvidia/bin,host-path=/var/lib/nvidia/bin,mode=rw \
 	    --metadata-from-file startup-script=scripts/install-cos-gpu.sh ;\
@@ -139,90 +193,36 @@ create_gcp:
 		echo "* PROCESSOR_MODE currently set to $(PROCESSOR_MODE)" ;\
 	fi
 
-create_cpu_gcp:
-	@if [ "$(CHECK_VM)" = "$(GCP_VM)" ]; then\
-		echo "* $(GCP_VM) already exists; proceeding to start" ;\
-		gcloud compute instances start $(GCP_VM) ;\
-	else \
-		echo "* $(GCP_VM) DOES NOT exist; proceeding with creation" ;\
-	    gcloud compute instances create-with-container $(GCP_VM) \
-		--image-project=gce-uefi-images \
-		--image-family=cos-beta \
-	    --container-image $(DOCKER_URL) \
-	    --container-restart-policy on-failure \
-	    --container-privileged \
-	    --container-stdin \
-	    --container-tty \
-	    --container-mount-host-path mount-path=/home/jupyter,host-path=/home/jupyter,mode=rw \
-	    --container-command "jupyter" \
-	    --container-arg="lab" \
-	    --container-arg="--ip=0.0.0.0" \
-	    --container-arg="--port=8443" \
-	    --container-arg="--NotebookApp.allow_origin='*'" \
-	    --container-arg="--NotebookApp.ip='*'" \
-	    --container-arg="--NotebookApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
-	    --container-arg="--NotebookApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
-	    --container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/projects'" \
-		--container-arg="--NotebookApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
-	    --machine-type n1-standard-4 \
-	    --boot-disk-size 200GB \
-	    --disk auto-delete=no,boot=no,device-name=$(DATA_DISK),mode=rw,name=$(DATA_DISK) \
-	    --container-mount-disk mode=rw,mount-path=/$(DATA_DISK),name=$(DATA_DISK) \
-	    --tags=http-server,https-server \
-	    --preemptible ;\
-	fi
-
-create_gpu_gcp:
-	@if [ "$(CHECK_VM)" = "$(GCP_VM)" ]; then\
-		echo "* $(GCP_VM) already exists; proceeding to start" ;\
-		gcloud compute instances start $(GCP_VM) ;\
-	else \
-		echo "* $(GCP_VM) DOES NOT exist; proceeding with creation" ;\
-	    gcloud compute instances create-with-container $(GCP_VM) \
-		--image-project=gce-uefi-images \
-		--image-family=cos-beta \
-	    --container-image $(DOCKER_URL) \
-	    --container-restart-policy on-failure \
-	    --container-privileged \
-	    --container-stdin \
-	    --container-tty \
-	    --container-mount-host-path mount-path=/home/jupyter,host-path=/home/jupyter,mode=rw \
-	    --container-command "jupyter" \
-	    --container-arg="lab" \
-	    --container-arg="--ip=0.0.0.0" \
-	    --container-arg="--port=8443" \
-	    --container-arg="--NotebookApp.allow_origin='*'" \
-	    --container-arg="--NotebookApp.ip='*'" \
-	    --container-arg="--NotebookApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
-	    --container-arg="--NotebookApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
-	    --container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/projects'" \
-		--container-arg="--NotebookApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
-	    --machine-type n1-standard-4 \
-	    --boot-disk-size 200GB \
-	    --disk auto-delete=no,boot=no,device-name=$(DATA_DISK),mode=rw,name=$(DATA_DISK) \
-	    --container-mount-disk mode=rw,mount-path=/$(DATA_DISK),name=$(DATA_DISK) \
-	    --tags=http-server,https-server \
-	    --preemptible \
-	    --accelerator count=1,type=nvidia-tesla-t4 \
-	    --container-mount-host-path mount-path=/usr/local/nvidia/lib64,host-path=/var/lib/nvidia/lib64,mode=rw \
-	    --container-mount-host-path mount-path=/usr/local/nvidia/bin,host-path=/var/lib/nvidia/bin,mode=rw \
-	    --metadata-from-file startup-script=scripts/install-cos-gpu.sh ;\
-	fi
 
 update_gcp:
 	gcloud compute instances update-container $(GCP_VM) \
 	--container-command "jupyter" \
 	--container-arg="lab" \
 	--container-arg="--ip=0.0.0.0" \
-	--container-arg="--port=8443" \
+	--container-arg="--port=$(JUPYTER_PORT)" \
 	--container-arg="--NotebookApp.allow_origin='*'" \
 	--container-arg="--NotebookApp.ip='*'" \
 	--container-arg="--NotebookApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
 	--container-arg="--NotebookApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
-	--container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/projects'" \
 	--container-arg="--NotebookApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
+	--container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
+	--container-mount-disk mode=rw,mount-path=/$(DATA_DISK),name=$(DATA_DISK) \
 	--container-mount-host-path mount-path=/usr/local/nvidia/lib64,host-path=/var/lib/nvidia/lib64,mode=rw \
 	--container-mount-host-path mount-path=/usr/local/nvidia/bin,host-path=/var/lib/nvidia/bin,mode=rw
+
+update_gcp_insecure:
+	gcloud compute instances update-container $(GCP_VM) \
+	--container-command "jupyter" \
+	--container-arg="lab" \
+	--container-arg="--ip=0.0.0.0" \
+	--container-arg="--port=$(JUPYTER_PORT)" \
+	--container-arg="--NotebookApp.allow_origin='*'" \
+	--container-arg="--NotebookApp.ip='*'" \
+	--container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
+	--container-arg="--NotebookApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$c5qsHzYTJsLNc7V4x7vl+w\$$1SVl9t+L5DaMsYQr39o1oA" \
+	--container-mount-host-path mount-path=/usr/local/nvidia/lib64,host-path=/var/lib/nvidia/lib64,mode=rw \
+	--container-mount-host-path mount-path=/usr/local/nvidia/bin,host-path=/var/lib/nvidia/bin,mode=rw
+	@echo "* GCP insecure container update complete"
 
 start_gcp:
 	gcloud compute instances start $(GCP_VM)
@@ -243,7 +243,7 @@ update_container_image: start_gcp wait
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	--command 'docker images && docker pull $(DOCKER_URL) && docker images'
 
-restart_container:
+restart_container_1 restart_container_2:
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	--command 'docker restart $(GCP_CONTAINER)'
 
@@ -273,7 +273,7 @@ wait_exist_vm:
 	done ;\
 	echo "* $(GCP_VM) is now available"
 
-wait_running_container:
+wait_running_container wait_running_container_2:
 	@while [ "$$CONTAINER_IMAGE" != "$(DOCKER_URL)" ]; do \
 		echo "* waiting for container" ;\
 		sleep 5 ;\
@@ -326,7 +326,16 @@ get_container_id:
 
 ssl_cert_copy_to_gcp:
 	gcloud compute scp --recurse etc/certs \
-	$(USER_NAME)@$(GCP_VM):/mnt/disks/gce-containers-mounts/gce-persistent-disks/$(DATA_DISK)/$(USER_NAME)
+	$(USER_NAME)@$(GCP_VM):/tmp
+	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	--command "sudo cp -r /tmp/certs /mnt/disks/gce-containers-mounts/gce-persistent-disks/$(DATA_DISK)/$(USER_NAME) && \
+               sudo rm -r /tmp/certs"
+	@echo "* completed copying /etc/certs directory to $(DATA_DISK)/$(USER_NAME)/"
+
+create_notebooks_dir_gcp:
+	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	--command "sudo install -d -m 0755 -o 1000 -g 100 /mnt/disks/gce-containers-mounts/gce-persistent-disks/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)"
+	@echo "* completed creation of NOTEBOOKS_DIR: $(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)"
 
 check_cf_env_set:
 	@if [ -z "$$CF_API_KEY" ] || [ -z "$$CF_ZONE" ] || [ -z "$$CF_RECORD_ID" ] || [ -z "$$CF_EMAIL" ] || [ -z "$$CF_DOMAIN" ]; then \
@@ -336,9 +345,9 @@ check_cf_env_set:
 		echo "* cloudflare variables required by scripts/cloudflare-update.sh all defined";\
     fi
 
-ssl_redirect_gcp:
+external_port_redirect_gcp:
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
-	--command 'sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8443'
+	--command 'sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport $(EXTERNAL_PORT) -j REDIRECT --to-port $(JUPYTER_PORT)'
 
 update_ip_gcp_cf: check_cf_env_set
 	scripts/cloudflare-update.sh $(GCP_IP) | json_pp
@@ -350,10 +359,104 @@ set_tags_gcp:
 	gcloud compute instances remove-tags $(GCP_VM) --tags=http-server
 	gcloud compute instances add-tags $(GCP_VM) --tags=https-server
 
-wait:
+wait_1 wait_2 wait_3:
 	@echo "* pausing for 30 seconds"
 	@sleep 30
 
+#-----------------------#
+# deprecated GCP
+#-----------------------#
+
+ssl_redirect_gcp:
+	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	--command 'sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8443'
+
+setup_cpu_gcp: \
+check_cf_env_set \
+create_data_disk \
+create_cpu_gcp \
+wait_1 \
+external_port_redirect_gcp update_ip_gcp_cf
+
+setup_gpu_gcp: \
+check_cf_env_set \
+create_data_disk \
+create_gpu_gcp \
+wait_exist_vm wait_1 wait_running_container \
+install_nvidia_container check_nvidia \
+install_pyro_container \
+external_port_redirect_gcp update_ip_gcp_cf \
+restart_container_1
+
+create_cpu_gcp:
+	@if [ "$(CHECK_VM)" = "$(GCP_VM)" ]; then\
+		echo "* $(GCP_VM) already exists; proceeding to start" ;\
+		gcloud compute instances start $(GCP_VM) ;\
+	else \
+		echo "* $(GCP_VM) DOES NOT exist; proceeding with creation" ;\
+	    gcloud compute instances create-with-container $(GCP_VM) \
+		--image-project=gce-uefi-images \
+		--image-family=cos-beta \
+	    --container-image $(DOCKER_URL) \
+	    --container-restart-policy on-failure \
+	    --container-privileged \
+	    --container-stdin \
+	    --container-tty \
+	    --container-mount-host-path mount-path=/home/jupyter,host-path=/home/jupyter,mode=rw \
+	    --container-command "jupyter" \
+	    --container-arg="lab" \
+	    --container-arg="--ip=0.0.0.0" \
+	    --container-arg="--port=$(JUPYTER_PORT)" \
+	    --container-arg="--NotebookApp.allow_origin='*'" \
+	    --container-arg="--NotebookApp.ip='*'" \
+	    --container-arg="--NotebookApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
+	    --container-arg="--NotebookApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
+	    --container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
+		--container-arg="--NotebookApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
+	    --machine-type $(GCP_MACHINE_TYPE) \
+	    --boot-disk-size $(BOOT_DISK_SIZE) \
+	    --disk auto-delete=no,boot=no,device-name=$(DATA_DISK),mode=rw,name=$(DATA_DISK) \
+	    --container-mount-disk mode=rw,mount-path=/$(DATA_DISK),name=$(DATA_DISK) \
+	    --tags=http-server,https-server \
+	    --preemptible ;\
+	fi
+
+create_gpu_gcp:
+	@if [ "$(CHECK_VM)" = "$(GCP_VM)" ]; then\
+		echo "* $(GCP_VM) already exists; proceeding to start" ;\
+		gcloud compute instances start $(GCP_VM) ;\
+	else \
+		echo "* $(GCP_VM) DOES NOT exist; proceeding with creation" ;\
+	    gcloud compute instances create-with-container $(GCP_VM) \
+		--image-project=gce-uefi-images \
+		--image-family=cos-beta \
+	    --container-image $(DOCKER_URL) \
+	    --container-restart-policy on-failure \
+	    --container-privileged \
+	    --container-stdin \
+	    --container-tty \
+	    --container-mount-host-path mount-path=/home/jupyter,host-path=/home/jupyter,mode=rw \
+	    --container-command "jupyter" \
+	    --container-arg="lab" \
+	    --container-arg="--ip=0.0.0.0" \
+	    --container-arg="--port=$(JUPYTER_PORT)" \
+	    --container-arg="--NotebookApp.allow_origin='*'" \
+	    --container-arg="--NotebookApp.ip='*'" \
+	    --container-arg="--NotebookApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
+	    --container-arg="--NotebookApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
+	    --container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
+		--container-arg="--NotebookApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
+	    --machine-type $(GCP_MACHINE_TYPE) \
+	    --boot-disk-size $(BOOT_DISK_SIZE) \
+	    --disk auto-delete=no,boot=no,device-name=$(DATA_DISK),mode=rw,name=$(DATA_DISK) \
+	    --container-mount-disk mode=rw,mount-path=/$(DATA_DISK),name=$(DATA_DISK) \
+	    --tags=http-server,https-server \
+	    --preemptible \
+	    --accelerator count=$(GCP_ACCELERATOR_COUNT),type=$(GCP_ACCELERATOR_TYPE) \
+	    --container-mount-host-path mount-path=/usr/local/nvidia/lib64,host-path=/var/lib/nvidia/lib64,mode=rw \
+	    --container-mount-host-path mount-path=/usr/local/nvidia/bin,host-path=/var/lib/nvidia/bin,mode=rw \
+	    --metadata-from-file startup-script=scripts/install-cos-gpu.sh ;\
+	fi
 
 #-----------------------#
 # Make variable check
@@ -366,6 +469,11 @@ print_make_vars:
 	$(info    GIT_COMMIT is $(GIT_COMMIT))
 	$(info    USER_NAME is $(USER_NAME))
 	$(info    GCP_VM is $(GCP_VM))
+	$(info    GCP_MACHINE_TYPE is $(GCP_MACHINE_TYPE))
+	$(info    GCP_ACCELERATOR_TYPE is $(GCP_ACCELERATOR_TYPE))
+	$(info    DATA_DISK is $(DATA_DISK))
+	$(info    JUPYTER_PORT is $(JUPYTER_PORT))
+	$(info    EXTERNAL_PORT is $(EXTERNAL_PORT))
 	$(info    CHECK_VM is $(CHECK_VM))
 	$(info    GCP_IP is $(GCP_IP))
 	$(info    GCP_VM_PREVIOUS is $(GCP_VM_PREVIOUS))

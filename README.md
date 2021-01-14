@@ -8,6 +8,20 @@ This is a [Docker][] configuration for running [jupyter][] || [lab][] with kerne
 
 See the [Makefile](Makefile) for relevant commands.
 
+## tl;dr
+
+If you have the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) setup on your machine and are logged into an account with [GCP GPU quota of 1 or greater](https://cloud.google.com/compute/quotas#requesting_additional_quota), you should be able to run
+
+``` bash
+make initialize_gcp_insecure
+```
+
+and after about 15 minutes, access jupyter lab via HTTP at the external IP of the VM. However, you may want to investigate how to setup SSL/HTTPS access with `initialize_gcp_secure`. 
+
+You can stop with `make stop_gcp` and restart the insecure machine with `make startup_gcp_insecure`. Any data you save at the path `$(DATA_DISK)/$(USER_NAME)` should be (re)attached via a persistent disk named `$(DATA_DISK)` in your GCP account. Data you place anywhere else will be lost on stopping the container or VM. When you open jupyter lab, the file browser will be pointed at `$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOK_DIR)`.
+
+You can destroy everything except your `$(DATA_DISK)` by running `make delete_previous_gcp`. This is controlled by `GCP_VM_PREVIOUS=$(GCP_VM)`, which may need to be edited if changing other variables causes this value to fall out of sync with the state of your GCP account.
+
 ## container images
 
 ### images
@@ -73,11 +87,11 @@ projectId: <project ID>
 projectNumber: '<project number>'
 ```
 
-Once the Google Cloud SDK is configured, follow the list of Make targets that proceed from `setup_gcp` in the [Makefile](Makefile).
+Once the Google Cloud SDK is configured, follow the list of Make targets that proceed from `initialize_gcp_insecure` in the [Makefile](Makefile). Insecure only refers to the lack of SSL (i.e. the notebook will be served over HTTP as opposed to HTTPS). To setup SSL, see `initialize_gcp_secure` and the section on [Cloudflare](#cloudflare). After running one of the initialize targets, machines can be stopped with the `stop_gcp` target and returned to a working state with the appropriate `startup` target such as `startup_gcp_insecure`.
 
 ##### jupyter notebook security
 
-If you would only like to implement password-based authentication, you will need to follow the instructions in the jupyter notebook documentation for [Preparing a hashed password](https://jupyter-notebook.readthedocs.io/en/stable/public_server.html#preparing-a-hashed-password). You can then edit the relevant lines in the [Makefile](Makefile). The password in the git history (`%HfuQRa@X%9&8MxM`) should obviously be treated as compromised. You can generate the associated salted, hashed password in python
+If you would only like to implement password-based authentication, you will need to follow the instructions in the jupyter notebook documentation on [preparing a hashed password](https://jupyter-notebook.readthedocs.io/en/stable/public_server.html#preparing-a-hashed-password). You can then edit the relevant lines in the [Makefile](Makefile). The password in the git history (`%HfuQRa@X%9&8MxM`) should obviously be treated as compromised. You can generate the associated salted, hashed password in python
 
 ```python
 from notebook.auth import passwd
