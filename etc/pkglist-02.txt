@@ -4,6 +4,7 @@ emacs
 fd
 fzf
 ghostscript
+github-cli
 grub
 htop
 hub
