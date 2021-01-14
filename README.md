@@ -9,7 +9,23 @@ This is a [Docker][] configuration for running [jupyter][] || [lab][] with kerne
 See the [Makefile](Makefile) for relevant commands.
 
 ## container images
+
+### images
 Images are available from [Docker hub](https://hub.docker.com/r/cameronraysmith/notebooks) and [GitHub Container Registry](https://ghcr.io/cameronraysmith/notebooks).
+
+### contents
+
+In addition to the jupyter kernels listed in the [about](#about) section, the following software is installed by the [Dockerfile](Dockerfile)
+
+* [arch linux packages](https://archlinux.org/packages/) listed in [etc/pkglist-01.txt](etc/pkglist-01.txt) and [etc/pkglist-02.txt](etc/pkglist-02.txt)
+* [yay](https://aur.archlinux.org/packages/yay/) AUR helper
+* [jupyter lab](https://jupyterlab.readthedocs.io/en/stable/) dependencies along with a number of jupyter lab extensions and their dependencies (not listed here as this is going to change soon with an upgrade to jupyter lab `>=3.0`). A default configuration is in [etc/jupyter_notebook_config.py](etc/jupyter_notebook_config.py), which may be overridden by supplying container arguments in the [cloud](#jupyter-notebook-security) setup.
+* [python](https://github.com/python) packages listed in [etc/python-libraries.txt](etc/python-libraries.txt) 
+* [julia](https://github.com/JuliaLang/IJulia.jl) packages listed in [etc/Project.toml](etc/Project.toml)
+* [thoughtbot/rcm](https://github.com/thoughtbot/rcm) and [thoughtbot/dotfiles](https://github.com/thoughtbot/dotfiles)
+* [zsh](https://www.zsh.org/) and [ohmyzsh](https://github.com/ohmyzsh/ohmyzsh)
+* [romkatv/powerlevel10k](https://github.com/romkatv/powerlevel10k) with default configuration in [etc/p10k.zsh](etc/p10k.zsh)
+* [hlissner/doom-emacs](https://github.com/hlissner/doom-emacs)
 
 ## setup
 
@@ -59,12 +75,34 @@ projectNumber: '<project number>'
 
 Once the Google Cloud SDK is configured, follow the list of Make targets that proceed from `setup_gcp` in the [Makefile](Makefile).
 
+##### jupyter notebook security
+
+If you would only like to implement password-based authentication, you will need to follow the instructions in the jupyter notebook documentation for [Preparing a hashed password](https://jupyter-notebook.readthedocs.io/en/stable/public_server.html#preparing-a-hashed-password). You can then edit the relevant lines in the [Makefile](Makefile). The password in the git history (`%HfuQRa@X%9&8MxM`) should obviously be treated as compromised. You can generate the associated salted, hashed password in python
+
+```python
+from notebook.auth import passwd
+passwd()
+Enter password: %HfuQRa@X%9&8MxM
+Verify password: %HfuQRa@X%9&8MxM
+'argon2:$argon2id$v=19$m=10240,t=10,p=8$hQQSNsDLkgTth1v7IjN4Ig$G+O1EfHDdKq/hOZUODBnQA'
+```
+
+This is the origin of the following lines in the [Makefile](Makefile):
+
+``` bash
+--container-arg="--NotebookApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
+```
+
+Note that the `$` in the salted, hashed password have to be escaped as `\$$`.
+
 ##### data
 
 It is assumed that data will be managed via a persistent disk named `$DATA_DISK` that will be attached in read-write mode to one running instance at a time. If you would like to run multiple instances of this container at the same time, you will need to account for the need to create multiple persistent disks.
 
 #### Cloudflare
-This section is only relevant if you would like to access the jupyter notebook server at a custom domain via SSL. Cloudflare is used for [managing CA certificates](https://support.cloudflare.com/hc/en-us/articles/115000479507). See the variables required by [scripts/cloudflare-update.sh](scripts/cloudflare-update.sh) and checked by the Make target `check_cf_env_set` to setup the environment as necessary.
+This section is only relevant if you would like to access the jupyter notebook server at a custom domain via SSL. Cloudflare is used for [managing Origin CA certificates](https://support.cloudflare.com/hc/en-us/articles/115000479507). See the variables required by [scripts/cloudflare-update.sh](scripts/cloudflare-update.sh) and checked by the Make target `check_cf_env_set` to setup the environment as necessary.
+
+Once you have created the `cf-cert.pem` and `cf-key.pem` files, place them at `./etc/certs`. The Make target `ssl_cert_copy_to_gcp` can then be used to copy them to the [data persistent disk](#data). So long as this disk is maintained and the certificates remain valid, this process should not need to be repeated. Of course, anyone who gains access to this disk will be able to read the contents of the certificates unless additional security measures are taken. 
 
 ## file listing
 
