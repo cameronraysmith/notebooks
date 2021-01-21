@@ -9,6 +9,8 @@ list:
 #-----------------------#
 # Make variables
 #-----------------------#
+# %HfuQRa@X%9&8MxM
+JUPYTER_PASSWORD=sha1:0af606f6f6ce:11fe6ae47992d2d7a9015d322cf75e5a77c57149
 
 DOCKER_REGISTRY=registry.hub.docker.com
 DOCKER_USER=cameronraysmith
@@ -143,14 +145,13 @@ create_gcp:
 	    --container-mount-host-path mount-path=/home/jupyter,host-path=/home/jupyter,mode=rw \
 	    --container-command "jupyter" \
 	    --container-arg="lab" \
-	    --container-arg="--ip=0.0.0.0" \
 	    --container-arg="--port=$(JUPYTER_PORT)" \
-	    --container-arg="--ServerApp.allow_origin='*'" \
-	    --container-arg="--ServerApp.ip='*'" \
-	    --container-arg="--ServerApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
-	    --container-arg="--ServerApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
-	    --container-arg="--ServerApp.root_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
-		--container-arg="--ServerApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$c5qsHzYTJsLNc7V4x7vl+w\$$1SVl9t+L5DaMsYQr39o1oA" \
+	    --container-arg="--ServerApp.allow_origin=*" \
+	    --container-arg="--ServerApp.ip=*" \
+	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem" \
+	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem" \
+	    --container-arg="--ServerApp.root_dir=/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)" \
+		--container-arg="--ServerApp.password=$(JUPYTER_PASSWORD)" \
 	    --machine-type $(GCP_MACHINE_TYPE) \
 	    --boot-disk-size $(BOOT_DISK_SIZE) \
 	    --disk auto-delete=no,boot=no,device-name=$(DATA_DISK),mode=rw,name=$(DATA_DISK) \
@@ -170,14 +171,13 @@ create_gcp:
 	    --container-mount-host-path mount-path=/home/jupyter,host-path=/home/jupyter,mode=rw \
 	    --container-command "jupyter" \
 	    --container-arg="lab" \
-	    --container-arg="--ip=0.0.0.0" \
 	    --container-arg="--port=$(JUPYTER_PORT)" \
-	    --container-arg="--ServerApp.allow_origin='*'" \
-	    --container-arg="--ServerApp.ip='*'" \
-	    --container-arg="--ServerApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
-	    --container-arg="--ServerApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
-	    --container-arg="--ServerApp.root_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
-		--container-arg="--ServerApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$c5qsHzYTJsLNc7V4x7vl+w\$$1SVl9t+L5DaMsYQr39o1oA" \
+	    --container-arg="--ServerApp.allow_origin=*" \
+	    --container-arg="--ServerApp.ip=*" \
+	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem" \
+	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem" \
+	    --container-arg="--ServerApp.root_dir=/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)" \
+		--container-arg="--ServerApp.password=$(JUPYTER_PASSWORD)" \
 	    --machine-type $(GCP_MACHINE_TYPE) \
 	    --boot-disk-size $(BOOT_DISK_SIZE) \
 	    --disk auto-delete=no,boot=no,device-name=$(DATA_DISK),mode=rw,name=$(DATA_DISK) \
@@ -198,14 +198,13 @@ update_gcp:
 	gcloud compute instances update-container $(GCP_VM) \
 	--container-command "jupyter" \
 	--container-arg="lab" \
-	--container-arg="--ip=0.0.0.0" \
 	--container-arg="--port=$(JUPYTER_PORT)" \
-	--container-arg="--ServerApp.allow_origin='*'" \
-	--container-arg="--ServerApp.ip='*'" \
-	--container-arg="--ServerApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
-	--container-arg="--ServerApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
-	--container-arg="--ServerApp.root_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
-	--container-arg="--ServerApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$c5qsHzYTJsLNc7V4x7vl+w\$$1SVl9t+L5DaMsYQr39o1oA" \
+	--container-arg="--ServerApp.allow_origin=*" \
+	--container-arg="--ServerApp.ip=*" \
+	--container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem" \
+	--container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem" \
+	--container-arg="--ServerApp.root_dir=/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)" \
+	--container-arg="--ServerApp.password=$(JUPYTER_PASSWORD)" \
 	--container-mount-disk mode=rw,mount-path=/$(DATA_DISK),name=$(DATA_DISK) \
 	--container-mount-host-path mount-path=/usr/local/nvidia/lib64,host-path=/var/lib/nvidia/lib64,mode=rw \
 	--container-mount-host-path mount-path=/usr/local/nvidia/bin,host-path=/var/lib/nvidia/bin,mode=rw
@@ -214,12 +213,11 @@ update_gcp_insecure:
 	gcloud compute instances update-container $(GCP_VM) \
 	--container-command "jupyter" \
 	--container-arg="lab" \
-	--container-arg="--ip=0.0.0.0" \
 	--container-arg="--port=$(JUPYTER_PORT)" \
-	--container-arg="--ServerApp.allow_origin='*'" \
-	--container-arg="--ServerApp.ip='*'" \
-	--container-arg="--ServerApp.root_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
-	--container-arg="--ServerApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$c5qsHzYTJsLNc7V4x7vl+w\$$1SVl9t+L5DaMsYQr39o1oA" \
+	--container-arg="--ServerApp.allow_origin=*" \
+	--container-arg="--ServerApp.ip=*" \
+	--container-arg="--ServerApp.root_dir=/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)" \
+	--container-arg="--ServerApp.password=$(JUPYTER_PASSWORD)" \
 	--container-mount-host-path mount-path=/usr/local/nvidia/lib64,host-path=/var/lib/nvidia/lib64,mode=rw \
 	--container-mount-host-path mount-path=/usr/local/nvidia/bin,host-path=/var/lib/nvidia/bin,mode=rw
 	@echo "* GCP insecure container update complete"
@@ -327,6 +325,10 @@ get_container_id:
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	--command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_URL)' --format '{{.ID}}'"
 
+container_logs_gcp:
+	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	--command "docker logs $(GCP_CONTAINER)"
+
 ssl_cert_copy_to_gcp:
 	gcloud compute scp --recurse etc/certs \
 	$(USER_NAME)@$(GCP_VM):/tmp
@@ -408,14 +410,13 @@ create_cpu_gcp:
 	    --container-mount-host-path mount-path=/home/jupyter,host-path=/home/jupyter,mode=rw \
 	    --container-command "jupyter" \
 	    --container-arg="lab" \
-	    --container-arg="--ip=0.0.0.0" \
 	    --container-arg="--port=$(JUPYTER_PORT)" \
-	    --container-arg="--ServerApp.allow_origin='*'" \
-	    --container-arg="--ServerApp.ip='*'" \
-	    --container-arg="--ServerApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
-	    --container-arg="--ServerApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
-	    --container-arg="--ServerApp.root_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
-		--container-arg="--ServerApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
+	    --container-arg="--ServerApp.allow_origin=*" \
+	    --container-arg="--ServerApp.ip=*" \
+	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem" \
+	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem" \
+	    --container-arg="--ServerApp.root_dir=/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)" \
+		--container-arg="--ServerApp.password=$(JUPYTER_PASSWORD)" \
 	    --machine-type $(GCP_MACHINE_TYPE) \
 	    --boot-disk-size $(BOOT_DISK_SIZE) \
 	    --disk auto-delete=no,boot=no,device-name=$(DATA_DISK),mode=rw,name=$(DATA_DISK) \
@@ -441,14 +442,13 @@ create_gpu_gcp:
 	    --container-mount-host-path mount-path=/home/jupyter,host-path=/home/jupyter,mode=rw \
 	    --container-command "jupyter" \
 	    --container-arg="lab" \
-	    --container-arg="--ip=0.0.0.0" \
 	    --container-arg="--port=$(JUPYTER_PORT)" \
-	    --container-arg="--ServerApp.allow_origin='*'" \
-	    --container-arg="--ServerApp.ip='*'" \
-	    --container-arg="--ServerApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
-	    --container-arg="--ServerApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
-	    --container-arg="--ServerApp.root_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
-		--container-arg="--ServerApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
+	    --container-arg="--ServerApp.allow_origin=*" \
+	    --container-arg="--ServerApp.ip=*" \
+	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem" \
+	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem" \
+	    --container-arg="--ServerApp.root_dir=/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)" \
+		--container-arg="--ServerApp.password=$(JUPYTER_PASSWORD)" \
 	    --machine-type $(GCP_MACHINE_TYPE) \
 	    --boot-disk-size $(BOOT_DISK_SIZE) \
 	    --disk auto-delete=no,boot=no,device-name=$(DATA_DISK),mode=rw,name=$(DATA_DISK) \
