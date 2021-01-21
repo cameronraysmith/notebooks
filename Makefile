@@ -308,7 +308,10 @@ check_nvidia:
 
 install_pyro_container:
 	@if [ "$(PROCESSOR_MODE)" = "cpu" ]; then \
-		echo "* skipping pyro installation for cpu" ;\
+		echo "* installing cpu version of pyro for cpu" ;\
+	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
+			    pip install pyro-ppl'" ;\
 	elif [ "$(PROCESSOR_MODE)" = "gpu" ]; then \
 	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
