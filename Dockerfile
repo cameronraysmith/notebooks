@@ -36,8 +36,10 @@ RUN pip install wheel \
   jupytext \
   RISE \
   voila \
+  jupyterlab-sos \
   nbgitpuller \
-  jupyterhub
+  jupyterhub && \
+jupyter lab build
 
 
 RUN setcap 'CAP_NET_BIND_SERVICE=+eip' /usr/sbin/jupyter && \
