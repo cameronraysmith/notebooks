@@ -25,10 +25,19 @@ RUN groupadd --gid=${NB_GID} ${NB_USER} && \
 
 
 # install jupyter
-RUN pip install wheel jupyter jupyterlab jupyterlab-git \
-  nbresuse jupyterlab-topbar \
-  jupyterlab-system-monitor nbgitpuller \
-  jupyterhub jupytext RISE voila
+# https://github.com/arbennett/jupyterlab-themes
+RUN pip install wheel \
+  jupyter \
+  jupyterlab \
+  git+https://github.com/jupyterlab/jupyterlab-git.git \
+  nbresuse \
+  jupyterlab-topbar \
+  jupyterlab-system-monitor \
+  jupytext \
+  RISE \
+  voila \
+  nbgitpuller \
+  jupyterhub
 
 
 RUN setcap 'CAP_NET_BIND_SERVICE=+eip' /usr/sbin/jupyter && \
