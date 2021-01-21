@@ -145,12 +145,12 @@ create_gcp:
 	    --container-arg="lab" \
 	    --container-arg="--ip=0.0.0.0" \
 	    --container-arg="--port=$(JUPYTER_PORT)" \
-	    --container-arg="--NotebookApp.allow_origin='*'" \
-	    --container-arg="--NotebookApp.ip='*'" \
-	    --container-arg="--NotebookApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
-	    --container-arg="--NotebookApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
-		--container-arg="--NotebookApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
-	    --container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
+	    --container-arg="--ServerApp.allow_origin='*'" \
+	    --container-arg="--ServerApp.ip='*'" \
+	    --container-arg="--ServerApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
+	    --container-arg="--ServerApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
+	    --container-arg="--ServerApp.root_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
+		--container-arg="--ServerApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$c5qsHzYTJsLNc7V4x7vl+w\$$1SVl9t+L5DaMsYQr39o1oA" \
 	    --machine-type $(GCP_MACHINE_TYPE) \
 	    --boot-disk-size $(BOOT_DISK_SIZE) \
 	    --disk auto-delete=no,boot=no,device-name=$(DATA_DISK),mode=rw,name=$(DATA_DISK) \
@@ -172,12 +172,12 @@ create_gcp:
 	    --container-arg="lab" \
 	    --container-arg="--ip=0.0.0.0" \
 	    --container-arg="--port=$(JUPYTER_PORT)" \
-	    --container-arg="--NotebookApp.allow_origin='*'" \
-	    --container-arg="--NotebookApp.ip='*'" \
-	    --container-arg="--NotebookApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
-	    --container-arg="--NotebookApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
-		--container-arg="--NotebookApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
-	    --container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
+	    --container-arg="--ServerApp.allow_origin='*'" \
+	    --container-arg="--ServerApp.ip='*'" \
+	    --container-arg="--ServerApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
+	    --container-arg="--ServerApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
+	    --container-arg="--ServerApp.root_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
+		--container-arg="--ServerApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$c5qsHzYTJsLNc7V4x7vl+w\$$1SVl9t+L5DaMsYQr39o1oA" \
 	    --machine-type $(GCP_MACHINE_TYPE) \
 	    --boot-disk-size $(BOOT_DISK_SIZE) \
 	    --disk auto-delete=no,boot=no,device-name=$(DATA_DISK),mode=rw,name=$(DATA_DISK) \
@@ -200,12 +200,12 @@ update_gcp:
 	--container-arg="lab" \
 	--container-arg="--ip=0.0.0.0" \
 	--container-arg="--port=$(JUPYTER_PORT)" \
-	--container-arg="--NotebookApp.allow_origin='*'" \
-	--container-arg="--NotebookApp.ip='*'" \
-	--container-arg="--NotebookApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
-	--container-arg="--NotebookApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
-	--container-arg="--NotebookApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
-	--container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
+	--container-arg="--ServerApp.allow_origin='*'" \
+	--container-arg="--ServerApp.ip='*'" \
+	--container-arg="--ServerApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
+	--container-arg="--ServerApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
+	--container-arg="--ServerApp.root_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
+	--container-arg="--ServerApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$c5qsHzYTJsLNc7V4x7vl+w\$$1SVl9t+L5DaMsYQr39o1oA" \
 	--container-mount-disk mode=rw,mount-path=/$(DATA_DISK),name=$(DATA_DISK) \
 	--container-mount-host-path mount-path=/usr/local/nvidia/lib64,host-path=/var/lib/nvidia/lib64,mode=rw \
 	--container-mount-host-path mount-path=/usr/local/nvidia/bin,host-path=/var/lib/nvidia/bin,mode=rw
@@ -216,10 +216,10 @@ update_gcp_insecure:
 	--container-arg="lab" \
 	--container-arg="--ip=0.0.0.0" \
 	--container-arg="--port=$(JUPYTER_PORT)" \
-	--container-arg="--NotebookApp.allow_origin='*'" \
-	--container-arg="--NotebookApp.ip='*'" \
-	--container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
-	--container-arg="--NotebookApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$c5qsHzYTJsLNc7V4x7vl+w\$$1SVl9t+L5DaMsYQr39o1oA" \
+	--container-arg="--ServerApp.allow_origin='*'" \
+	--container-arg="--ServerApp.ip='*'" \
+	--container-arg="--ServerApp.root_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
+	--container-arg="--ServerApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$c5qsHzYTJsLNc7V4x7vl+w\$$1SVl9t+L5DaMsYQr39o1oA" \
 	--container-mount-host-path mount-path=/usr/local/nvidia/lib64,host-path=/var/lib/nvidia/lib64,mode=rw \
 	--container-mount-host-path mount-path=/usr/local/nvidia/bin,host-path=/var/lib/nvidia/bin,mode=rw
 	@echo "* GCP insecure container update complete"
@@ -410,12 +410,12 @@ create_cpu_gcp:
 	    --container-arg="lab" \
 	    --container-arg="--ip=0.0.0.0" \
 	    --container-arg="--port=$(JUPYTER_PORT)" \
-	    --container-arg="--NotebookApp.allow_origin='*'" \
-	    --container-arg="--NotebookApp.ip='*'" \
-	    --container-arg="--NotebookApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
-	    --container-arg="--NotebookApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
-	    --container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
-		--container-arg="--NotebookApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
+	    --container-arg="--ServerApp.allow_origin='*'" \
+	    --container-arg="--ServerApp.ip='*'" \
+	    --container-arg="--ServerApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
+	    --container-arg="--ServerApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
+	    --container-arg="--ServerApp.root_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
+		--container-arg="--ServerApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
 	    --machine-type $(GCP_MACHINE_TYPE) \
 	    --boot-disk-size $(BOOT_DISK_SIZE) \
 	    --disk auto-delete=no,boot=no,device-name=$(DATA_DISK),mode=rw,name=$(DATA_DISK) \
@@ -443,12 +443,12 @@ create_gpu_gcp:
 	    --container-arg="lab" \
 	    --container-arg="--ip=0.0.0.0" \
 	    --container-arg="--port=$(JUPYTER_PORT)" \
-	    --container-arg="--NotebookApp.allow_origin='*'" \
-	    --container-arg="--NotebookApp.ip='*'" \
-	    --container-arg="--NotebookApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
-	    --container-arg="--NotebookApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
-	    --container-arg="--NotebookApp.notebook_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
-		--container-arg="--NotebookApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
+	    --container-arg="--ServerApp.allow_origin='*'" \
+	    --container-arg="--ServerApp.ip='*'" \
+	    --container-arg="--ServerApp.certfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem'" \
+	    --container-arg="--ServerApp.keyfile='/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem'" \
+	    --container-arg="--ServerApp.root_dir='/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)'" \
+		--container-arg="--ServerApp.password=argon2:\$$argon2id\$$v=19\$$m=10240,t=10,p=8\$$hQQSNsDLkgTth1v7IjN4Ig\$$G+O1EfHDdKq/hOZUODBnQA" \
 	    --machine-type $(GCP_MACHINE_TYPE) \
 	    --boot-disk-size $(BOOT_DISK_SIZE) \
 	    --disk auto-delete=no,boot=no,device-name=$(DATA_DISK),mode=rw,name=$(DATA_DISK) \
