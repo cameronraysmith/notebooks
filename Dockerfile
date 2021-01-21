@@ -25,8 +25,7 @@ RUN groupadd --gid=${NB_GID} ${NB_USER} && \
 
 
 # install jupyter
-RUN pip install wheel jupyter jupyterlab jupyterlab-git && \
-nbgitpuller jupyterhub jupytext RISE voila
+RUN pip install wheel jupyter jupyterlab jupyterlab-git nbgitpuller jupyterhub jupytext RISE voila
 
 RUN setcap 'CAP_NET_BIND_SERVICE=+eip' /usr/sbin/jupyter && \
     setcap 'CAP_NET_BIND_SERVICE=+eip' /usr/bin/jupyter
