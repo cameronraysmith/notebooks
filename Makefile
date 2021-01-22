@@ -496,6 +496,10 @@ endif
 #		--container-arg="--NotebookApp.ResourceUseDisplay.track_cpu_percent=True" \#
 #		--container-arg="--NotebookApp.ResourceUseDisplay.cpu_limit=1" \#
 
+# 		--container-arg="--ResourceUseDisplay.track_cpu_percent=True" \#
+# 		--container-arg="--ResourceUseDisplay.mem_limit=$$(( $(MEM_LIMIT) *1024*1024*1024 ))" \#
+# 		--container-arg="--ResourceUseDisplay.cpu_limit=$$(( $(CPU_LIMIT) ))" \#
+
 # Find out if the working directory is clean
 # GIT_NOT_CLEAN_CHECK = $(shell git status --porcelain)
 # ifneq (x$(GIT_NOT_CLEAN_CHECK), x)
