@@ -54,6 +54,7 @@ RUN pip install --extra-index-url https://pypi.fury.io/arrow-nightlies/ --pre py
 
 ## install julia packages including jupyter kernel
 ENV CMDSTAN_HOME "${HOME}/.cmdstan/cmdstan-2.25.0/"
+ENV JULIA_CMDSTAN_HOME "${HOME}/.cmdstan/cmdstan-2.25.0/"
 COPY --chown=${NB_UID}:${NB_GID} ./etc/Project.toml ${HOME}/.julia/environments/v${JULIA_MAJOR_VERSION}/
 RUN julia -e 'using Pkg; Pkg.instantiate(); Pkg.API.precompile()'
 
