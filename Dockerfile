@@ -37,6 +37,7 @@ RUN pip install wheel \
   RISE \
   voila \
   jupyterlab-sos \
+  jupyterlab-execute-time \
   nbgitpuller \
   jupyterhub && \
 jupyter lab build
