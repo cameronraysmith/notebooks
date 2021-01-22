@@ -145,7 +145,7 @@ create_gcp:
 	    --container-mount-host-path mount-path=/home/jupyter,host-path=/home/jupyter,mode=rw \
 	    --container-command "jupyter" \
 	    --container-arg="lab" \
-	    --container-arg="--port=$(JUPYTER_PORT)" \
+	    --container-arg="--ServerApp.port=$(JUPYTER_PORT)" \
 	    --container-arg="--ServerApp.allow_origin=*" \
 	    --container-arg="--ServerApp.ip=*" \
 	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem" \
@@ -171,7 +171,7 @@ create_gcp:
 	    --container-mount-host-path mount-path=/home/jupyter,host-path=/home/jupyter,mode=rw \
 	    --container-command "jupyter" \
 	    --container-arg="lab" \
-	    --container-arg="--port=$(JUPYTER_PORT)" \
+	    --container-arg="--ServerApp.port=$(JUPYTER_PORT)" \
 	    --container-arg="--ServerApp.allow_origin=*" \
 	    --container-arg="--ServerApp.ip=*" \
 	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem" \
@@ -198,14 +198,13 @@ update_gcp:
 	gcloud compute instances update-container $(GCP_VM) \
 	--container-command "jupyter" \
 	--container-arg="lab" \
-	--container-arg="--port=$(JUPYTER_PORT)" \
+	--container-arg="--ServerApp.port=$(JUPYTER_PORT)" \
 	--container-arg="--ServerApp.allow_origin=*" \
 	--container-arg="--ServerApp.ip=*" \
 	--container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem" \
 	--container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem" \
 	--container-arg="--ServerApp.root_dir=/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)" \
 	--container-arg="--ServerApp.password=$(JUPYTER_PASSWORD)" \
-	--container-mount-disk mode=rw,mount-path=/$(DATA_DISK),name=$(DATA_DISK) \
 	--container-mount-host-path mount-path=/usr/local/nvidia/lib64,host-path=/var/lib/nvidia/lib64,mode=rw \
 	--container-mount-host-path mount-path=/usr/local/nvidia/bin,host-path=/var/lib/nvidia/bin,mode=rw
 
@@ -213,7 +212,7 @@ update_gcp_insecure:
 	gcloud compute instances update-container $(GCP_VM) \
 	--container-command "jupyter" \
 	--container-arg="lab" \
-	--container-arg="--port=$(JUPYTER_PORT)" \
+	--container-arg="--ServerApp.port=$(JUPYTER_PORT)" \
 	--container-arg="--ServerApp.allow_origin=*" \
 	--container-arg="--ServerApp.ip=*" \
 	--container-arg="--ServerApp.root_dir=/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)" \
@@ -410,7 +409,7 @@ create_cpu_gcp:
 	    --container-mount-host-path mount-path=/home/jupyter,host-path=/home/jupyter,mode=rw \
 	    --container-command "jupyter" \
 	    --container-arg="lab" \
-	    --container-arg="--port=$(JUPYTER_PORT)" \
+	    --container-arg="--ServerApp.port=$(JUPYTER_PORT)" \
 	    --container-arg="--ServerApp.allow_origin=*" \
 	    --container-arg="--ServerApp.ip=*" \
 	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem" \
@@ -442,7 +441,7 @@ create_gpu_gcp:
 	    --container-mount-host-path mount-path=/home/jupyter,host-path=/home/jupyter,mode=rw \
 	    --container-command "jupyter" \
 	    --container-arg="lab" \
-	    --container-arg="--port=$(JUPYTER_PORT)" \
+	    --container-arg="--ServerApp.port=$(JUPYTER_PORT)" \
 	    --container-arg="--ServerApp.allow_origin=*" \
 	    --container-arg="--ServerApp.ip=*" \
 	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem" \
