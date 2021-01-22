@@ -6,6 +6,7 @@ arviz
 bash_kernel
 bokeh
 causalgraphicalmodels
+cmdstanpy
 dask
 daft
 git+https://github.com/jeffkaufman/icdiff.git

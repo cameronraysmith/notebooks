@@ -49,9 +49,11 @@ RUN setcap 'CAP_NET_BIND_SERVICE=+eip' /usr/sbin/jupyter && \
 # install python libraries
 COPY --chown=${NB_UID}:${NB_GID} ./etc/python-libraries.txt ${HOME}/etc/
 RUN pip install --extra-index-url https://pypi.fury.io/arrow-nightlies/ --pre pyarrow && \
-    pip install -r ${HOME}/etc/python-libraries.txt
+    pip install -r ${HOME}/etc/python-libraries.txt && \
+    install_cmdstan --version "2.25.0" --dir ${HOME}/.cmdstan
 
 ## install julia packages including jupyter kernel
+ENV CMDSTAN_HOME "${HOME}/.cmdstan/cmdstan-2.25.0/"
 COPY --chown=${NB_UID}:${NB_GID} ./etc/Project.toml ${HOME}/.julia/environments/v${JULIA_MAJOR_VERSION}/
 RUN julia -e 'using Pkg; Pkg.instantiate(); Pkg.API.precompile()'
 
