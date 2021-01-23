@@ -363,7 +363,7 @@ set_tags_gcp:
 	gcloud compute instances remove-tags $(GCP_VM) --tags=http-server
 	gcloud compute instances add-tags $(GCP_VM) --tags=https-server
 
-wait_1 wait_2 wait_3:
+wait wait_1 wait_2 wait_3:
 	@echo "* pausing for 30 seconds"
 	@sleep 30
 
