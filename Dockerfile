@@ -37,6 +37,7 @@ RUN pip install wheel \
   RISE \
   voila \
   jupyterlab-sos \
+  aquirdturtle_collapsible_headings \
   jupyterlab-execute-time \
   nbgitpuller \
   jupyterhub && \
