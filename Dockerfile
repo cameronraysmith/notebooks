@@ -9,7 +9,7 @@ ARG NB_GID="100"
 ENV USER ${NB_USER}
 ENV HOME /home/${NB_USER}
 ENV PATH "${HOME}/.local/bin:${PATH}"
-ENV JULIA_MAJOR_VERSION="1.5"
+ENV JULIA_MAJOR_VERSION="1.6"
 
 # install primary arch packages
 RUN mkdir -p ${HOME}/etc
