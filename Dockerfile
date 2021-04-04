@@ -111,8 +111,8 @@ USER ${NB_UID}
 #     sudo rm -rf ./yay-git && \
 RUN sudo git clone https://aur.archlinux.org/yay.git /opt/yay-git
 RUN sudo chown -R ${NB_UID}:${NB_GID} /opt/yay-git
-RUN sudo chown -R ${NB_UID}:${NB_GID} ${HOME}/.cache && \
-    sudo chown -R ${NB_UID}:${NB_GID} ${HOME}/.config
+# RUN sudo chown -R ${NB_UID}:${NB_GID} ${HOME}/.cache && \
+#     sudo chown -R ${NB_UID}:${NB_GID} ${HOME}/.config
 RUN cd /opt/yay-git && \
     makepkg -si --noconfirm
 # RUN cd /opt && \
