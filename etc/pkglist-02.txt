@@ -16,7 +16,7 @@ otf-latin-modern
 pandoc
 ripgrep
 rsync
-texlive-most
+texlive-core
 the_silver_searcher
 time
 tmux
