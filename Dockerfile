@@ -39,6 +39,7 @@ RUN pip install wheel \
   jupyterlab-sos \
   aquirdturtle_collapsible_headings \
   jupyterlab-execute-time \
+  jupyterlab-skip-traceback \
   nbgitpuller \
   jupyterhub && \
 jupyter lab build
