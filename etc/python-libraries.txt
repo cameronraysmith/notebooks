@@ -11,10 +11,10 @@ dask
 daft
 git+https://github.com/jeffkaufman/icdiff.git
 ipywidgets
+jax
 jupyterlab_latex
-git+https://github.com/cameronraysmith/nbdev.git
+nbdev
 git+https://github.com/pyro-ppl/numpyro.git
-plotly
 pymc3
 nbdime
 nbresuse
