@@ -6,19 +6,36 @@ list:
 	@$(MAKE) -pRrq -f $(lastword $(MAKEFILE_LIST)) : 2>/dev/null | awk -v RS= -F: '/^# File/,/^# Finished Make data base/ {if ($$1 !~ "^[#.]") {print $$1}}' | sort | egrep -v -e '^[^[:alnum:]]' -e '^$@$$'
 
 
-#-----------------------#
-# Make variables
-#-----------------------#
+#-------------------------------------------#
+# user-specific variables (should be reviewed/edited)
+#-------------------------------------------#
+
+# unique identifier within the project
+# for the VM and your DATA_DISK
+GCP_VM_IDENTIFIER=cameron
+
+# the SHA1-hashed password for the jupyter server
+# e.g.
 # %HfuQRa@X%9&8MxM
-JUPYTER_PASSWORD=sha1:0af606f6f6ce:11fe6ae47992d2d7a9015d322cf75e5a77c57149
+# becomes
+# JUPYTER_PASSWORD=sha1:0af606f6f6ce:11fe6ae47992d2d7a9015d322cf75e5a77c57149
+JUPYTER_PASSWORD=sha1:95a03035ad41:45b8758ed94c7373d82b2516375cde9118f0422f
+
+
+# cpu vs gpu
+PROCESSOR_MODE=cpu
+
+# true vs false
+HTTPS=true
+
+#----------------------------------------#
+# default variables (may require editing)
+#----------------------------------------#
 
 DOCKER_REGISTRY=registry.hub.docker.com
 DOCKER_USER=cameronraysmith
-
 DOCKER_CONTAINER=notebooks
-PROCESSOR_MODE=gpu
 DOCKER_TAG=latest
-# DOCKER_TAG=develop
 USER_NAME=jovyan
 NOTEBOOKS_DIR=projects
 
@@ -26,16 +43,22 @@ GCP_MACHINE_TYPE=n1-standard-4
 GCP_ACCELERATOR_TYPE=nvidia-tesla-t4
 GCP_ACCELERATOR_COUNT=1
 
-# DATA_DISK=data
-# DATA_DISK=data-test
-DATA_DISK=data-insecure
-DATA_DISK_SIZE=50GB
-
+DATA_DISK_SIZE=200GB
 BOOT_DISK_SIZE=200GB
 
 JUPYTER_PORT=8443
-# EXTERNAL_PORT=443
-EXTERNAL_PORT=80
+
+#-------------------#
+# derived variables
+#-------------------#
+ifeq ($(HTTPS),true)
+  EXTERNAL_PORT=443
+else
+  EXTERNAL_PORT=80
+endif
+
+DATA_DISK=data
+# DATA_DISK=data-$(GCP_VM_IDENTIFIER)
 
 GCP_VM_PREVIOUS=$(GCP_VM)
 
@@ -57,64 +80,67 @@ CODE_VERSION = $(strip $(shell cat VERSION))
 # gcp targets
 #------------------------
 
-initialize_gcp_insecure: \
-create_data_disk \
-create_gcp \
-wait_exist_vm \
-wait_1 \
-wait_running_container \
-create_notebooks_dir_gcp \
-update_gcp_insecure \
-wait_2 \
-wait_running_container_2 \
-install_nvidia_container \
-check_nvidia \
-install_pyro_container \
-external_port_redirect_gcp \
-restart_container_1
+ifeq ($(HTTPS),true)
+initialize_gcp: \
+  check_cf_env_set \
+  create_data_disk \
+  create_gcp \
+  wait_exist_vm \
+  wait_1 \
+  wait_running_container \
+  create_notebooks_dir_gcp \
+  ssl_cert_copy_to_gcp \
+  restart_container_1 \
+  wait_2 \
+  install_nvidia_container \
+  check_nvidia \
+  install_pyro_container \
+  external_port_redirect_gcp \
+  update_ip_gcp_cf \
+  restart_container_2
+else
+initialize_gcp: \
+  create_data_disk \
+  create_gcp \
+  wait_exist_vm \
+  wait_1 \
+  wait_running_container \
+  create_notebooks_dir_gcp \
+  update_gcp_insecure \
+  wait_2 \
+  wait_running_container_2 \
+  install_nvidia_container \
+  check_nvidia \
+  install_pyro_container \
+  external_port_redirect_gcp \
+  restart_container_1
+endif
 
-startup_gcp_insecure: \
-create_gcp \
-wait_exist_vm \
-wait_1 \
-wait_running_container \
-install_nvidia_container \
-check_nvidia \
-install_pyro_container \
-external_port_redirect_gcp \
-restart_container_1
-
-initialize_gcp_secure: \
-check_cf_env_set \
-create_data_disk \
-create_gcp \
-wait_exist_vm \
-wait_1 \
-wait_running_container \
-create_notebooks_dir_gcp \
-ssl_cert_copy_to_gcp \
-restart_container_1 \
-wait_2 \
-install_nvidia_container \
-check_nvidia \
-install_pyro_container \
-external_port_redirect_gcp \
-update_ip_gcp_cf \
-restart_container_2
-
-startup_gcp_secure: \
-check_cf_env_set \
-create_gcp \
-wait_exist_vm \
-wait_1 \
-wait_running_container \
-install_nvidia_container \
-check_nvidia \
-install_pyro_container \
-external_port_redirect_gcp \
-update_ip_gcp_cf \
-restart_container_1
-
+ifeq ($(HTTPS),true)
+startup_gcp: \
+  check_cf_env_set \
+  create_gcp \
+  wait_exist_vm \
+  wait_1 \
+  wait_running_container \
+  install_nvidia_container \
+  check_nvidia \
+  install_pyro_container \
+  external_port_redirect_gcp \
+  update_ip_gcp_cf \
+  restart_container_1
+else
+startup_gcp: \
+  create_gcp \
+  wait_exist_vm \
+  wait_1 \
+  wait_running_container \
+  install_nvidia_container \
+  check_nvidia \
+  install_pyro_container \
+  external_port_redirect_gcp \
+  restart_container_1
+endif
 
 delete_previous_gcp: print_make_vars stop_previous_gcp detach_data_disk_gcp
 	gcloud compute instances delete --quiet $(GCP_VM_PREVIOUS)
@@ -136,7 +162,7 @@ create_gcp:
 		echo "* $(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
 		--image-project=gce-uefi-images \
-		--image-family=cos-beta \
+		--image-family=cos-stable \
 	    --container-image $(DOCKER_URL) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \
@@ -162,7 +188,7 @@ create_gcp:
 		echo "* $(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
 		--image-project=gce-uefi-images \
-		--image-family=cos-beta \
+		--image-family=cos-stable \
 	    --container-image $(DOCKER_URL) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \
@@ -400,7 +426,7 @@ create_cpu_gcp:
 		echo "* $(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
 		--image-project=gce-uefi-images \
-		--image-family=cos-beta \
+		--image-family=cos-stable \
 	    --container-image $(DOCKER_URL) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \
@@ -432,7 +458,7 @@ create_gpu_gcp:
 		echo "* $(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
 		--image-project=gce-uefi-images \
-		--image-family=cos-beta \
+		--image-family=cos-stable \
 	    --container-image $(DOCKER_URL) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \

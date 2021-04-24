@@ -9,7 +9,7 @@ ARG NB_GID="100"
 ENV USER ${NB_USER}
 ENV HOME /home/${NB_USER}
 ENV PATH "${HOME}/.local/bin:${PATH}"
-ENV JULIA_MAJOR_VERSION="1.5"
+ENV JULIA_MAJOR_VERSION="1.6"
 
 # install primary arch packages
 RUN mkdir -p ${HOME}/etc
@@ -39,6 +39,7 @@ RUN pip install wheel \
   jupyterlab-sos \
   aquirdturtle_collapsible_headings \
   jupyterlab-execute-time \
+  jupyterlab-skip-traceback \
   nbgitpuller \
   jupyterhub && \
 jupyter lab build
@@ -107,14 +108,22 @@ RUN chown -R ${NB_UID}:${NB_GID} ${HOME}
 USER ${NB_UID}
 
 ## install yay AUR package manager
-RUN cd /opt && \
-    sudo rm -rf ./yay-git && \
-    sudo git clone https://aur.archlinux.org/yay.git ./yay-git && \
-    sudo chown -R ${NB_UID}:${NB_GID} ./yay-git && \
-    sudo chown -R ${NB_UID}:${NB_GID} ${HOME}/.cache && \
-    sudo chown -R ${NB_UID}:${NB_GID} ${HOME}/.config && \
-    cd yay-git && \
+# RUN cd /opt && \
+#     sudo rm -rf ./yay-git && \
+RUN sudo git clone https://aur.archlinux.org/yay.git /opt/yay-git
+RUN sudo chown -R ${NB_UID}:${NB_GID} /opt/yay-git
+# RUN sudo chown -R ${NB_UID}:${NB_GID} ${HOME}/.cache && \
+#     sudo chown -R ${NB_UID}:${NB_GID} ${HOME}/.config
+RUN cd /opt/yay-git && \
     makepkg -si --noconfirm
+# RUN cd /opt && \
+#     sudo rm -rf ./yay-git && \
+#     sudo git clone https://aur.archlinux.org/yay.git ./yay-git && \
+#     sudo chown -R ${NB_UID}:${NB_GID} ./yay-git && \
+#     sudo chown -R ${NB_UID}:${NB_GID} ${HOME}/.cache && \
+#     sudo chown -R ${NB_UID}:${NB_GID} ${HOME}/.config && \
+#     cd yay-git && \
+#     makepkg -si --noconfirm
 
 # install dotfiles framework, oh-my-zsh, and powerlevel10k
 WORKDIR ${HOME}
