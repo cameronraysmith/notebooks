@@ -28,6 +28,9 @@ PROCESSOR_MODE=cpu
 # true vs false
 HTTPS=true
 
+# gcloud compute zone
+GCP_ZONE=us-central1-f
+
 #----------------------------------------#
 # default variables (may require editing)
 #----------------------------------------#
@@ -83,6 +86,7 @@ CODE_VERSION = $(strip $(shell cat VERSION))
 ifeq ($(HTTPS),true)
 initialize_gcp: \
   check_cf_env_set \
+  update_gcp_zone \
   create_data_disk \
   create_gcp \
   wait_exist_vm \
@@ -100,6 +104,7 @@ initialize_gcp: \
   restart_container_2
 else
 initialize_gcp: \
+  update_gcp_zone \
   create_data_disk \
   create_gcp \
   wait_exist_vm \
@@ -119,6 +124,7 @@ endif
 ifeq ($(HTTPS),true)
 startup_gcp: \
   check_cf_env_set \
+  update_gcp_zone \
   create_gcp \
   wait_exist_vm \
   wait_1 \
@@ -131,6 +137,7 @@ startup_gcp: \
   restart_container_1
 else
 startup_gcp: \
+  update_gcp_zone \
   create_gcp \
   wait_exist_vm \
   wait_1 \
@@ -141,6 +148,10 @@ startup_gcp: \
   external_port_redirect_gcp \
   restart_container_1
 endif
+
+
+update_gcp_zone:
+	gcloud config set compute/zone $(GCP_ZONE)
 
 delete_previous_gcp: print_make_vars stop_previous_gcp detach_data_disk_gcp
 	gcloud compute instances delete --quiet $(GCP_VM_PREVIOUS)
