@@ -129,6 +129,7 @@ startup_gcp: \
   wait_exist_vm \
   wait_1 \
   wait_running_container \
+  wait_2 \
   install_nvidia_container \
   check_nvidia \
   install_pyro_container \
@@ -142,6 +143,7 @@ startup_gcp: \
   wait_exist_vm \
   wait_1 \
   wait_running_container \
+  wait_2 \
   install_nvidia_container \
   check_nvidia \
   install_pyro_container \
@@ -154,7 +156,10 @@ update_gcp_zone:
 	gcloud config set compute/zone $(GCP_ZONE)
 
 delete_previous_gcp: print_make_vars stop_previous_gcp detach_data_disk_gcp
+	@echo "* delete VM $(GCP_VM_PREVIOUS)"
 	gcloud compute instances delete --quiet $(GCP_VM_PREVIOUS)
+	@echo "* remove GCP known hosts file"
+	rm ~/.ssh/google_compute_known_hosts || true
 
 create_data_disk:
 	@if [ "$(CHECK_DATA_DISK)" = "$(DATA_DISK)" ]; then\
@@ -262,6 +267,9 @@ start_gcp:
 	gcloud compute instances start $(GCP_VM)
 
 stop_gcp:
+	@echo "* remove GCP known hosts file"
+	rm ~/.ssh/google_compute_known_hosts || true
+	@echo "* stop VM $(GCP_VM)"
 	gcloud compute instances stop $(GCP_VM) || true
 
 stop_previous_gcp:
@@ -364,6 +372,10 @@ get_container_id:
 container_logs_gcp:
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	--command "docker logs $(GCP_CONTAINER)"
+
+get_vm_hostname:
+	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	--command "curl 'http://metadata.google.internal/computeMetadata/v1/instance/hostname' -H 'Metadata-Flavor: Google'"
 
 ssl_cert_copy_to_gcp:
 	gcloud compute scp --recurse etc/certs \
