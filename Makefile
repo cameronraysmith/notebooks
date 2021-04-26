@@ -281,6 +281,9 @@ ssh_gcp:
 ssh_container_gcp:
 	gcloud compute ssh $(GCP_VM) --container $(GCP_CONTAINER)
 
+ssh_jupyter_iap_tunnel:
+	gcloud compute ssh $(GCP_VM) -- -L $(JUPYTER_PORT):localhost:$(JUPYTER_PORT)
+
 update_container_image: start_gcp wait
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	--command 'docker images && docker pull $(DOCKER_URL) && docker images'
