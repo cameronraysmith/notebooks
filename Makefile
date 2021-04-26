@@ -98,7 +98,7 @@ initialize_gcp: \
   wait_2 \
   install_nvidia_container \
   check_nvidia \
-  install_pyro_container \
+  install_libraries_container \
   external_port_redirect_gcp \
   update_ip_gcp_cf \
   restart_container_2
@@ -116,7 +116,7 @@ initialize_gcp: \
   wait_running_container_2 \
   install_nvidia_container \
   check_nvidia \
-  install_pyro_container \
+  install_libraries_container \
   external_port_redirect_gcp \
   restart_container_1
 endif
@@ -132,7 +132,7 @@ startup_gcp: \
   wait_2 \
   install_nvidia_container \
   check_nvidia \
-  install_pyro_container \
+  install_libraries_container \
   external_port_redirect_gcp \
   update_ip_gcp_cf \
   restart_container_1
@@ -146,7 +146,7 @@ startup_gcp: \
   wait_2 \
   install_nvidia_container \
   check_nvidia \
-  install_pyro_container \
+  install_libraries_container \
   external_port_redirect_gcp \
   restart_container_1
 endif
@@ -348,18 +348,20 @@ check_nvidia:
 		echo "* PROCESSOR_MODE currently set to $(PROCESSOR_MODE)" ;\
 	fi
 
-install_pyro_container:
+install_libraries_container:
 	@if [ "$(PROCESSOR_MODE)" = "cpu" ]; then \
 		echo "* installing cpu version of pyro for cpu" ;\
 	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
-			    pip install pyro-ppl'" ;\
+			    pacman -Syu --needed --noconfirm bazel && \
+			    pip install pyro-ppl scanpy scvi-tools tensorflow tensorflow-probability'" ;\
 	elif [ "$(PROCESSOR_MODE)" = "gpu" ]; then \
 	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
 			    export LD_LIBRARY_PATH=/usr/local/nvidia/lib64 && \
-			    pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html && \
-			    pip install pyro-ppl'" ;\
+				pip install torch==1.8.1+cu111 torchvision==0.9.1+cu111 torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html && \
+			    pip install gpustat && \
+			    pip install pyro-ppl scanpy scvi-tools tensorflow tensorflow-probability'" ;\
 	else \
 		echo "* check that you have specified a support PROCESSOR_MODE (gpu or cpu)";\
 		echo "* PROCESSOR_MODE currently set to $(PROCESSOR_MODE)" ;\
@@ -437,7 +439,7 @@ create_data_disk \
 create_gpu_gcp \
 wait_exist_vm wait_1 wait_running_container \
 install_nvidia_container check_nvidia \
-install_pyro_container \
+install_libraries_container \
 external_port_redirect_gcp update_ip_gcp_cf \
 restart_container_1
 
