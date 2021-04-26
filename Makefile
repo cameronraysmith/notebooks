@@ -72,7 +72,7 @@ DOCKER_URL=$(DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(DOCKER_TAG)
 # e.g. notebooks-gpu-latest
 GCP_VM=$(DOCKER_CONTAINER)-$(DOCKER_TAG)-$(PROCESSOR_MODE)-$(EXTERNAL_PORT)-$(DATA_DISK)
 CHECK_VM=$(shell gcloud compute instances list --filter="name=$(GCP_VM)" | grep -o $(GCP_VM))
-CHECK_DATA_DISK=$(shell gcloud compute disks list --filter="name=$(DATA_DISK)" | grep -o $(DATA_DISK))
+CHECK_DATA_DISK=$(shell gcloud compute disks list --filter="name=$(DATA_DISK) AND zone:($(GCP_ZONE))" | grep -o $(DATA_DISK))
 GCP_IP=$(shell gcloud compute instances describe $(GCP_VM) --format="get(networkInterfaces[0].accessConfigs[0].natIP)")
 GCP_CONTAINER=$(shell gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_URL)' --format '{{.ID}}'")
 
@@ -523,6 +523,7 @@ print_make_vars:
 	$(info    GCP_MACHINE_TYPE is $(GCP_MACHINE_TYPE))
 	$(info    GCP_ACCELERATOR_TYPE is $(GCP_ACCELERATOR_TYPE))
 	$(info    DATA_DISK is $(DATA_DISK))
+	$(info    CHECK_DATA_DISK is $(CHECK_DATA_DISK))
 	$(info    JUPYTER_PORT is $(JUPYTER_PORT))
 	$(info    EXTERNAL_PORT is $(EXTERNAL_PORT))
 	$(info    CHECK_VM is $(CHECK_VM))
