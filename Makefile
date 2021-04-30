@@ -28,6 +28,9 @@ PROCESSOR_MODE=cpu
 # true vs false
 HTTPS=true
 
+# gcloud compute zone
+GCP_ZONE=us-central1-f
+
 #----------------------------------------#
 # default variables (may require editing)
 #----------------------------------------#
@@ -69,7 +72,7 @@ DOCKER_URL=$(DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(DOCKER_TAG)
 # e.g. notebooks-gpu-latest
 GCP_VM=$(DOCKER_CONTAINER)-$(DOCKER_TAG)-$(PROCESSOR_MODE)-$(EXTERNAL_PORT)-$(DATA_DISK)
 CHECK_VM=$(shell gcloud compute instances list --filter="name=$(GCP_VM)" | grep -o $(GCP_VM))
-CHECK_DATA_DISK=$(shell gcloud compute disks list --filter="name=$(DATA_DISK)" | grep -o $(DATA_DISK))
+CHECK_DATA_DISK=$(shell gcloud compute disks list --filter="name=$(DATA_DISK) AND zone:($(GCP_ZONE))" | grep -o $(DATA_DISK))
 GCP_IP=$(shell gcloud compute instances describe $(GCP_VM) --format="get(networkInterfaces[0].accessConfigs[0].natIP)")
 GCP_CONTAINER=$(shell gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_URL)' --format '{{.ID}}'")
 
@@ -83,6 +86,7 @@ CODE_VERSION = $(strip $(shell cat VERSION))
 ifeq ($(HTTPS),true)
 initialize_gcp: \
   check_cf_env_set \
+  update_gcp_zone \
   create_data_disk \
   create_gcp \
   wait_exist_vm \
@@ -94,12 +98,13 @@ initialize_gcp: \
   wait_2 \
   install_nvidia_container \
   check_nvidia \
-  install_pyro_container \
+  install_libraries_container \
   external_port_redirect_gcp \
   update_ip_gcp_cf \
   restart_container_2
 else
 initialize_gcp: \
+  update_gcp_zone \
   create_data_disk \
   create_gcp \
   wait_exist_vm \
@@ -111,7 +116,7 @@ initialize_gcp: \
   wait_running_container_2 \
   install_nvidia_container \
   check_nvidia \
-  install_pyro_container \
+  install_libraries_container \
   external_port_redirect_gcp \
   restart_container_1
 endif
@@ -119,37 +124,56 @@ endif
 ifeq ($(HTTPS),true)
 startup_gcp: \
   check_cf_env_set \
+  update_gcp_zone \
   create_gcp \
   wait_exist_vm \
   wait_1 \
   wait_running_container \
+  wait_2 \
   install_nvidia_container \
   check_nvidia \
-  install_pyro_container \
+  install_libraries_container \
   external_port_redirect_gcp \
   update_ip_gcp_cf \
   restart_container_1
 else
 startup_gcp: \
+  update_gcp_zone \
   create_gcp \
   wait_exist_vm \
   wait_1 \
   wait_running_container \
+  wait_2 \
   install_nvidia_container \
   check_nvidia \
-  install_pyro_container \
+  install_libraries_container \
   external_port_redirect_gcp \
   restart_container_1
 endif
 
+
+update_gcp_zone:
+	gcloud config set compute/zone $(GCP_ZONE)
+
+list_disk_snapshots:
+    gcloud compute snapshots list --sort-by=~creationTimestamp
+
+# e.g.
+# make restore_data_disk_from_snapshot DATA_DISK=test-restore SNAPSHOT=data-user-us-east1-d-20210426075809-k126gh50
+restore_data_disk_from_snapshot:
+	gcloud compute disks create $(DATA_DISK) --source-snapshot=$(SNAPSHOT) --size=$(DATA_DISK_SIZE) --zone=$(GCP_ZONE)
+
 delete_previous_gcp: print_make_vars stop_previous_gcp detach_data_disk_gcp
+	@echo "* delete VM $(GCP_VM_PREVIOUS)"
 	gcloud compute instances delete --quiet $(GCP_VM_PREVIOUS)
+	@echo "* remove GCP known hosts file"
+	rm ~/.ssh/google_compute_known_hosts || true
 
 create_data_disk:
 	@if [ "$(CHECK_DATA_DISK)" = "$(DATA_DISK)" ]; then\
 		echo "* a disk named \"$(DATA_DISK)\" already exists" ;\
 	else \
-		gcloud compute disks create $(DATA_DISK) --size=$(DATA_DISK_SIZE);\
+		gcloud compute disks create $(DATA_DISK) --size=$(DATA_DISK_SIZE) --zone=$(GCP_ZONE);\
 	fi
 
 switch_gcp: stop_previous_gcp detach_data_disk_gcp attach_data_disk_gcp start_gcp wait_1 external_port_redirect_gcp update_ip_gcp_cf
@@ -251,6 +275,9 @@ start_gcp:
 	gcloud compute instances start $(GCP_VM)
 
 stop_gcp:
+	@echo "* remove GCP known hosts file"
+	rm ~/.ssh/google_compute_known_hosts || true
+	@echo "* stop VM $(GCP_VM)"
 	gcloud compute instances stop $(GCP_VM) || true
 
 stop_previous_gcp:
@@ -261,6 +288,9 @@ ssh_gcp:
 
 ssh_container_gcp:
 	gcloud compute ssh $(GCP_VM) --container $(GCP_CONTAINER)
+
+ssh_jupyter_iap_tunnel:
+	gcloud compute ssh $(GCP_VM) -- -L $(JUPYTER_PORT):localhost:$(JUPYTER_PORT)
 
 update_container_image: start_gcp wait
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
@@ -329,18 +359,21 @@ check_nvidia:
 		echo "* PROCESSOR_MODE currently set to $(PROCESSOR_MODE)" ;\
 	fi
 
-install_pyro_container:
+install_libraries_container:
 	@if [ "$(PROCESSOR_MODE)" = "cpu" ]; then \
 		echo "* installing cpu version of pyro for cpu" ;\
 	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
-			    pip install pyro-ppl'" ;\
+			    pacman -Syu --needed --noconfirm bazel && \
+			    pip install pyro-ppl scanpy scvi-tools tensorflow tensorflow-probability mofapy2'" ;\
 	elif [ "$(PROCESSOR_MODE)" = "gpu" ]; then \
 	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
 			    export LD_LIBRARY_PATH=/usr/local/nvidia/lib64 && \
-			    pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 torchaudio===0.7.2 -f https://download.pytorch.org/whl/torch_stable.html && \
-			    pip install pyro-ppl'" ;\
+				pip install torch==1.8.1+cu111 torchvision==0.9.1+cu111 torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html && \
+				pip install pyro-ppl scanpy scvi-tools tensorflow tensorflow-probability mofapy2 && \
+				pip install gpustat && \
+				CUDA_PATH=/opt/cuda/ pip install cupy-cuda112'" ;\
 	else \
 		echo "* check that you have specified a support PROCESSOR_MODE (gpu or cpu)";\
 		echo "* PROCESSOR_MODE currently set to $(PROCESSOR_MODE)" ;\
@@ -353,6 +386,10 @@ get_container_id:
 container_logs_gcp:
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	--command "docker logs $(GCP_CONTAINER)"
+
+get_vm_hostname:
+	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	--command "curl 'http://metadata.google.internal/computeMetadata/v1/instance/hostname' -H 'Metadata-Flavor: Google'"
 
 ssl_cert_copy_to_gcp:
 	gcloud compute scp --recurse etc/certs \
@@ -414,7 +451,7 @@ create_data_disk \
 create_gpu_gcp \
 wait_exist_vm wait_1 wait_running_container \
 install_nvidia_container check_nvidia \
-install_pyro_container \
+install_libraries_container \
 external_port_redirect_gcp update_ip_gcp_cf \
 restart_container_1
 
@@ -500,6 +537,7 @@ print_make_vars:
 	$(info    GCP_MACHINE_TYPE is $(GCP_MACHINE_TYPE))
 	$(info    GCP_ACCELERATOR_TYPE is $(GCP_ACCELERATOR_TYPE))
 	$(info    DATA_DISK is $(DATA_DISK))
+	$(info    CHECK_DATA_DISK is $(CHECK_DATA_DISK))
 	$(info    JUPYTER_PORT is $(JUPYTER_PORT))
 	$(info    EXTERNAL_PORT is $(EXTERNAL_PORT))
 	$(info    CHECK_VM is $(CHECK_VM))

@@ -10,6 +10,7 @@ ENV USER ${NB_USER}
 ENV HOME /home/${NB_USER}
 ENV PATH "${HOME}/.local/bin:${PATH}"
 ENV JULIA_MAJOR_VERSION="1.6"
+ENV CUDA_PATH="/opt/cuda/"
 
 # install primary arch packages
 RUN mkdir -p ${HOME}/etc
