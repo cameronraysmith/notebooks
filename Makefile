@@ -173,7 +173,7 @@ create_data_disk:
 	@if [ "$(CHECK_DATA_DISK)" = "$(DATA_DISK)" ]; then\
 		echo "* a disk named \"$(DATA_DISK)\" already exists" ;\
 	else \
-		gcloud compute disks create $(DATA_DISK) --size=$(DATA_DISK_SIZE);\
+		gcloud compute disks create $(DATA_DISK) --size=$(DATA_DISK_SIZE) --zone=$(GCP_ZONE);\
 	fi
 
 switch_gcp: stop_previous_gcp detach_data_disk_gcp attach_data_disk_gcp start_gcp wait_1 external_port_redirect_gcp update_ip_gcp_cf
