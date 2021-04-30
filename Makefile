@@ -373,6 +373,7 @@ install_libraries_container:
 				pip install torch==1.8.1+cu111 torchvision==0.9.1+cu111 torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html && \
 				pip install pyro-ppl scanpy scvi-tools tensorflow tensorflow-probability mofapy2 && \
 				pip install gpustat && \
+				CUDA_PATH=/opt/cuda/ pip install cupy-cuda112'" ;\
 	else \
 		echo "* check that you have specified a support PROCESSOR_MODE (gpu or cpu)";\
 		echo "* PROCESSOR_MODE currently set to $(PROCESSOR_MODE)" ;\
