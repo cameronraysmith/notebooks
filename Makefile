@@ -155,6 +155,14 @@ endif
 update_gcp_zone:
 	gcloud config set compute/zone $(GCP_ZONE)
 
+list_disk_snapshots:
+    gcloud compute snapshots list --sort-by=~creationTimestamp
+
+# e.g.
+# make restore_data_disk_from_snapshot DATA_DISK=test-restore SNAPSHOT=data-user-us-east1-d-20210426075809-k126gh50
+restore_data_disk_from_snapshot:
+	gcloud compute disks create $(DATA_DISK) --source-snapshot=$(SNAPSHOT) --size=$(DATA_DISK_SIZE) --zone=$(GCP_ZONE)
+
 delete_previous_gcp: print_make_vars stop_previous_gcp detach_data_disk_gcp
 	@echo "* delete VM $(GCP_VM_PREVIOUS)"
 	gcloud compute instances delete --quiet $(GCP_VM_PREVIOUS)
