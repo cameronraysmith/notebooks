@@ -198,8 +198,8 @@ create_gcp:
 	    --container-arg="--ServerApp.port=$(JUPYTER_PORT)" \
 	    --container-arg="--ServerApp.allow_origin=*" \
 	    --container-arg="--ServerApp.ip=*" \
-	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem" \
-	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem" \
+	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cert.pem" \
+	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/key.pem" \
 	    --container-arg="--ServerApp.root_dir=/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)" \
 		--container-arg="--ServerApp.password=$(JUPYTER_PASSWORD)" \
 	    --machine-type $(GCP_MACHINE_TYPE) \
@@ -224,8 +224,8 @@ create_gcp:
 	    --container-arg="--ServerApp.port=$(JUPYTER_PORT)" \
 	    --container-arg="--ServerApp.allow_origin=*" \
 	    --container-arg="--ServerApp.ip=*" \
-	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem" \
-	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem" \
+	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cert.pem" \
+	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/key.pem" \
 	    --container-arg="--ServerApp.root_dir=/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)" \
 		--container-arg="--ServerApp.password=$(JUPYTER_PASSWORD)" \
 	    --machine-type $(GCP_MACHINE_TYPE) \
@@ -251,8 +251,8 @@ update_gcp:
 	--container-arg="--ServerApp.port=$(JUPYTER_PORT)" \
 	--container-arg="--ServerApp.allow_origin=*" \
 	--container-arg="--ServerApp.ip=*" \
-	--container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem" \
-	--container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem" \
+	--container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cert.pem" \
+	--container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/key.pem" \
 	--container-arg="--ServerApp.root_dir=/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)" \
 	--container-arg="--ServerApp.password=$(JUPYTER_PASSWORD)" \
 	--container-mount-host-path mount-path=/usr/local/nvidia/lib64,host-path=/var/lib/nvidia/lib64,mode=rw \
@@ -475,8 +475,8 @@ create_cpu_gcp:
 	    --container-arg="--ServerApp.port=$(JUPYTER_PORT)" \
 	    --container-arg="--ServerApp.allow_origin=*" \
 	    --container-arg="--ServerApp.ip=*" \
-	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem" \
-	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem" \
+	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cert.pem" \
+	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/key.pem" \
 	    --container-arg="--ServerApp.root_dir=/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)" \
 		--container-arg="--ServerApp.password=$(JUPYTER_PASSWORD)" \
 	    --machine-type $(GCP_MACHINE_TYPE) \
@@ -507,8 +507,8 @@ create_gpu_gcp:
 	    --container-arg="--ServerApp.port=$(JUPYTER_PORT)" \
 	    --container-arg="--ServerApp.allow_origin=*" \
 	    --container-arg="--ServerApp.ip=*" \
-	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem" \
-	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem" \
+	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cert.pem" \
+	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/key.pem" \
 	    --container-arg="--ServerApp.root_dir=/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)" \
 		--container-arg="--ServerApp.password=$(JUPYTER_PASSWORD)" \
 	    --machine-type $(GCP_MACHINE_TYPE) \
