@@ -342,7 +342,7 @@ install_nvidia_container:
 	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
 			    export LD_LIBRARY_PATH=/usr/local/nvidia/lib64 && \
-			    pacman -Sy --needed --noconfirm cudnn'";\
+			    pacman -Sy --needed --noconfirm --overwrite cudnn'";\
 	else \
 		echo "* check that you have specified a support PROCESSOR_MODE (gpu or cpu)";\
 		echo "* PROCESSOR_MODE currently set to $(PROCESSOR_MODE)" ;\
