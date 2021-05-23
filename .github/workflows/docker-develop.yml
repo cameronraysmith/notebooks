@@ -10,11 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       -
-        name: Build
-        run: |
-          echo "Free space:"
-          df -h
-      -
         name: Maximize build space
         uses: easimon/maximize-build-space@master
         with:
@@ -25,11 +20,6 @@ jobs:
       -
         name: Checkout
         uses: actions/checkout@v2
-      -
-        name: Build
-        run: |
-          echo "Free space:"
-          df -h
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
