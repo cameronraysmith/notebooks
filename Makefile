@@ -128,27 +128,31 @@ startup_gcp: \
   create_gcp \
   wait_exist_vm \
   wait_1 \
-  wait_running_container \
+  update_container_image \
   wait_2 \
+  restart_container_1 \
+  wait_running_container \
   install_nvidia_container \
   check_nvidia \
   install_libraries_container \
   external_port_redirect_gcp \
   update_ip_gcp_cf \
-  restart_container_1
+  restart_container_2
 else
 startup_gcp: \
   update_gcp_zone \
   create_gcp \
   wait_exist_vm \
   wait_1 \
-  wait_running_container \
+  update_container_image \
   wait_2 \
+  restart_container_1 \
+  wait_running_container \
   install_nvidia_container \
   check_nvidia \
   install_libraries_container \
   external_port_redirect_gcp \
-  restart_container_1
+  restart_container_2
 endif
 
 
@@ -292,9 +296,13 @@ ssh_container_gcp:
 ssh_jupyter_iap_tunnel:
 	gcloud compute ssh $(GCP_VM) -- -L $(JUPYTER_PORT):localhost:$(JUPYTER_PORT)
 
-update_container_image: start_gcp wait
+# update_container_image: start_gcp wait
+# 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+# 	--command 'docker images && docker pull $(DOCKER_URL) && docker images'
+
+update_container_image:
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
-	--command 'docker images && docker pull $(DOCKER_URL) && docker images'
+	--command "docker pull $(DOCKER_URL)"
 
 restart_container_1 restart_container_2:
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
