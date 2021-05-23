@@ -3,6 +3,7 @@ e2fsprogs
 emacs
 fd
 fzf
+gcc-fortran
 ghostscript
 github-cli
 grub
