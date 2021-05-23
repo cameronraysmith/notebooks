@@ -89,7 +89,7 @@ RUN pacman -Syu --needed --noconfirm - < ${HOME}/etc/pkglist-02.txt && pacman -S
 
 # install R packages
 RUN echo "Sys.setenv(DOWNLOAD_STATIC_LIBV8 = 1); install.packages('rstan', repos = 'https://cloud.r-project.org/', dependencies = TRUE)" | R --slave
-RUN echo "install.packages('BiocManager', repos='http://cran.us.r-project.org', Ncpus = 4); install.packages('devtools', repos='http://cran.us.r-project.org', Ncpus = 4); BiocManager::install(c('cBioPortalData', 'AnVIL', 'iClusterPlus', 'MOFA2', 'MOFAdata', 'tidyverse', 'BloodCancerMultiOmics2017', 'curatedTCGAData'), type = 'binary', Ncpus = 4)" | R --slave
+RUN echo "install.packages('BiocManager', repos='http://cran.us.r-project.org', Ncpus = 4); install.packages('devtools', repos='http://cran.us.r-project.org', Ncpus = 4); BiocManager::install(c('cBioPortalData', 'AnVIL', 'iClusterPlus', 'MOFA2', 'MOFAdata', 'tidyverse', 'BloodCancerMultiOmics2017', 'curatedTCGAData', 'GenomicDataCommons'), type = 'binary', Ncpus = 4)" | R --slave
 
 
 # Copy startup scripts from jupyter-docker-stacks
