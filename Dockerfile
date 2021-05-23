@@ -114,22 +114,10 @@ RUN chown -R ${NB_UID}:${NB_GID} ${HOME}
 USER ${NB_UID}
 
 ## install yay AUR package manager
-# RUN cd /opt && \
-#     sudo rm -rf ./yay-git && \
 RUN sudo git clone https://aur.archlinux.org/yay.git /opt/yay-git
 RUN sudo chown -R ${NB_UID}:${NB_GID} /opt/yay-git
-# RUN sudo chown -R ${NB_UID}:${NB_GID} ${HOME}/.cache && \
-#     sudo chown -R ${NB_UID}:${NB_GID} ${HOME}/.config
 RUN cd /opt/yay-git && \
     makepkg -si --noconfirm
-# RUN cd /opt && \
-#     sudo rm -rf ./yay-git && \
-#     sudo git clone https://aur.archlinux.org/yay.git ./yay-git && \
-#     sudo chown -R ${NB_UID}:${NB_GID} ./yay-git && \
-#     sudo chown -R ${NB_UID}:${NB_GID} ${HOME}/.cache && \
-#     sudo chown -R ${NB_UID}:${NB_GID} ${HOME}/.config && \
-#     cd yay-git && \
-#     makepkg -si --noconfirm
 
 # install dotfiles framework, oh-my-zsh, and powerlevel10k
 WORKDIR ${HOME}
