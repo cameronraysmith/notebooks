@@ -12,6 +12,7 @@ hub
 inkscape
 man-db
 man-pages
+netcdf
 openssh
 otf-latin-modern
 pandoc
