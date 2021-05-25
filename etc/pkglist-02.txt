@@ -3,6 +3,7 @@ e2fsprogs
 emacs
 fd
 fzf
+gcc-fortran
 ghostscript
 github-cli
 grub
@@ -11,6 +12,7 @@ hub
 inkscape
 man-db
 man-pages
+netcdf
 openssh
 otf-latin-modern
 pandoc

@@ -128,27 +128,31 @@ startup_gcp: \
   create_gcp \
   wait_exist_vm \
   wait_1 \
-  wait_running_container \
+  update_container_image \
   wait_2 \
+  restart_container_1 \
+  wait_running_container \
   install_nvidia_container \
   check_nvidia \
   install_libraries_container \
   external_port_redirect_gcp \
   update_ip_gcp_cf \
-  restart_container_1
+  restart_container_2
 else
 startup_gcp: \
   update_gcp_zone \
   create_gcp \
   wait_exist_vm \
   wait_1 \
-  wait_running_container \
+  update_container_image \
   wait_2 \
+  restart_container_1 \
+  wait_running_container \
   install_nvidia_container \
   check_nvidia \
   install_libraries_container \
   external_port_redirect_gcp \
-  restart_container_1
+  restart_container_2
 endif
 
 
@@ -198,8 +202,8 @@ create_gcp:
 	    --container-arg="--ServerApp.port=$(JUPYTER_PORT)" \
 	    --container-arg="--ServerApp.allow_origin=*" \
 	    --container-arg="--ServerApp.ip=*" \
-	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem" \
-	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem" \
+	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cert.pem" \
+	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/key.pem" \
 	    --container-arg="--ServerApp.root_dir=/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)" \
 		--container-arg="--ServerApp.password=$(JUPYTER_PASSWORD)" \
 	    --machine-type $(GCP_MACHINE_TYPE) \
@@ -224,8 +228,8 @@ create_gcp:
 	    --container-arg="--ServerApp.port=$(JUPYTER_PORT)" \
 	    --container-arg="--ServerApp.allow_origin=*" \
 	    --container-arg="--ServerApp.ip=*" \
-	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem" \
-	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem" \
+	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cert.pem" \
+	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/key.pem" \
 	    --container-arg="--ServerApp.root_dir=/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)" \
 		--container-arg="--ServerApp.password=$(JUPYTER_PASSWORD)" \
 	    --machine-type $(GCP_MACHINE_TYPE) \
@@ -251,8 +255,8 @@ update_gcp:
 	--container-arg="--ServerApp.port=$(JUPYTER_PORT)" \
 	--container-arg="--ServerApp.allow_origin=*" \
 	--container-arg="--ServerApp.ip=*" \
-	--container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem" \
-	--container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem" \
+	--container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cert.pem" \
+	--container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/key.pem" \
 	--container-arg="--ServerApp.root_dir=/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)" \
 	--container-arg="--ServerApp.password=$(JUPYTER_PASSWORD)" \
 	--container-mount-host-path mount-path=/usr/local/nvidia/lib64,host-path=/var/lib/nvidia/lib64,mode=rw \
@@ -292,9 +296,13 @@ ssh_container_gcp:
 ssh_jupyter_iap_tunnel:
 	gcloud compute ssh $(GCP_VM) -- -L $(JUPYTER_PORT):localhost:$(JUPYTER_PORT)
 
-update_container_image: start_gcp wait
+# update_container_image: start_gcp wait
+# 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+# 	--command 'docker images && docker pull $(DOCKER_URL) && docker images'
+
+update_container_image:
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
-	--command 'docker images && docker pull $(DOCKER_URL) && docker images'
+	--command "docker pull $(DOCKER_URL)"
 
 restart_container_1 restart_container_2:
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
@@ -342,7 +350,7 @@ install_nvidia_container:
 	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
 			    export LD_LIBRARY_PATH=/usr/local/nvidia/lib64 && \
-			    pacman -Sy --needed --noconfirm cudnn'";\
+			    pacman -Sy --needed --noconfirm --overwrite cudnn'";\
 	else \
 		echo "* check that you have specified a support PROCESSOR_MODE (gpu or cpu)";\
 		echo "* PROCESSOR_MODE currently set to $(PROCESSOR_MODE)" ;\
@@ -475,8 +483,8 @@ create_cpu_gcp:
 	    --container-arg="--ServerApp.port=$(JUPYTER_PORT)" \
 	    --container-arg="--ServerApp.allow_origin=*" \
 	    --container-arg="--ServerApp.ip=*" \
-	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem" \
-	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem" \
+	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cert.pem" \
+	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/key.pem" \
 	    --container-arg="--ServerApp.root_dir=/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)" \
 		--container-arg="--ServerApp.password=$(JUPYTER_PASSWORD)" \
 	    --machine-type $(GCP_MACHINE_TYPE) \
@@ -507,8 +515,8 @@ create_gpu_gcp:
 	    --container-arg="--ServerApp.port=$(JUPYTER_PORT)" \
 	    --container-arg="--ServerApp.allow_origin=*" \
 	    --container-arg="--ServerApp.ip=*" \
-	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-cert.pem" \
-	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/cf-key.pem" \
+	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cert.pem" \
+	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/key.pem" \
 	    --container-arg="--ServerApp.root_dir=/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)" \
 		--container-arg="--ServerApp.password=$(JUPYTER_PASSWORD)" \
 	    --machine-type $(GCP_MACHINE_TYPE) \
