@@ -88,13 +88,13 @@ COPY --chown=${NB_UID}:${NB_GID} ./etc/pkglist-02.txt ${HOME}/etc/
 RUN pacman -Syu --needed --noconfirm - < ${HOME}/etc/pkglist-02.txt && pacman -Scc --noconfirm
 
 # install R packages
-RUN echo "Sys.setenv(DOWNLOAD_STATIC_LIBV8 = 1);
-    install.packages('rstan', repos = 'https://cloud.r-project.org/', dependencies = TRUE)" | R --slave
-RUN echo "install.packages('BiocManager', repos='http://cran.us.r-project.org', Ncpus = 4);
-    install.packages('devtools', repos='http://cran.us.r-project.org', Ncpus = 4);
-    BiocManager::install(c('cBioPortalData', 'AnVIL', 'iClusterPlus', 'MOFA2',
-    'MOFAdata', 'tidyverse', 'BloodCancerMultiOmics2017', 'curatedTCGAData',
-    'GenomicDataCommons'), type = 'binary', Ncpus = 4)" | R --slave
+RUN echo $'Sys.setenv(DOWNLOAD_STATIC_LIBV8 = 1); \n\
+    install.packages("rstan", repos = "https://cloud.r-project.org/", dependencies = TRUE)' | R --slave
+RUN echo $'install.packages("BiocManager", repos="http://cran.us.r-project.org", Ncpus = 4); \n\
+    install.packages("devtools", repos="http://cran.us.r-project.org", Ncpus = 4); \n\
+    BiocManager::install(c("cBioPortalData", "AnVIL", "iClusterPlus", "MOFA2", \n\
+    "MOFAdata", "tidyverse", "BloodCancerMultiOmics2017", "curatedTCGAData", \n\
+    "GenomicDataCommons"), type = "binary", Ncpus = 4)' | R --slave
 
 # RUN echo "BiocManager::install(c('MultiDataSet', 'Biobase', 'BiocGenerics',
 #     'oligo', 'snpStats', 'GenomeInfoDb', 'DMRcatedata', 'ArrayExpress',
