@@ -53,6 +53,7 @@ RUN setcap 'CAP_NET_BIND_SERVICE=+eip' /usr/sbin/jupyter && \
 # install python libraries
 COPY --chown=${NB_UID}:${NB_GID} ./etc/python-libraries.txt ${HOME}/etc/
 RUN pip install --extra-index-url https://pypi.fury.io/arrow-nightlies/ --pre pyarrow && \
+    pip install torch==1.8.1+cu111 torchvision==0.9.1+cu111 torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html && \
     pip install -r ${HOME}/etc/python-libraries.txt && \
     install_cmdstan --version "2.26.1" --dir ${HOME}/.cmdstan
 
