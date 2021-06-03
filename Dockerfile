@@ -147,7 +147,7 @@ RUN sudo chown ${NB_UID}:${NB_GID} ${HOME} && \
     mkdir -p ${HOME}/dotfiles-local && \
     cp ${HOME}/etc/{zshrc.local,gitconfig.local} ${HOME}/dotfiles-local && \
     mv ${HOME}/.zshrc ${HOME}/.zshrc.oh-my-zsh.base && \
-    env RCRC=$HOME/dotfiles/rcrc rcup && \
+    env RCRC=$HOME/dotfiles/rcrc rcup -f && \
     sudo usermod -s /bin/zsh ${NB_USER}
 
 COPY --chown=${NB_UID}:${NB_GID} ./etc/p10k.zsh ${HOME}/.p10k.zsh
