@@ -11,6 +11,7 @@ ENV HOME /home/${NB_USER}
 ENV PATH "${HOME}/.local/bin:${PATH}"
 ENV JULIA_MAJOR_VERSION="1.6"
 ENV CUDA_PATH="/opt/cuda/"
+ENV LD_LIBRARY_PATH="/usr/local/nvidia/lib64"
 
 # install primary arch packages
 RUN mkdir -p ${HOME}/etc
@@ -52,12 +53,13 @@ RUN setcap 'CAP_NET_BIND_SERVICE=+eip' /usr/sbin/jupyter && \
 # install python libraries
 COPY --chown=${NB_UID}:${NB_GID} ./etc/python-libraries.txt ${HOME}/etc/
 RUN pip install --extra-index-url https://pypi.fury.io/arrow-nightlies/ --pre pyarrow && \
+    pip install torch==1.8.1+cu111 torchvision==0.9.1+cu111 torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html && \
     pip install -r ${HOME}/etc/python-libraries.txt && \
-    install_cmdstan --version "2.25.0" --dir ${HOME}/.cmdstan
+    install_cmdstan --version "2.26.1" --dir ${HOME}/.cmdstan
 
 ## install julia packages including jupyter kernel
-ENV CMDSTAN_HOME "${HOME}/.cmdstan/cmdstan-2.25.0/"
-ENV JULIA_CMDSTAN_HOME "${HOME}/.cmdstan/cmdstan-2.25.0/"
+ENV CMDSTAN_HOME "${HOME}/.cmdstan/cmdstan-2.26.1/"
+ENV JULIA_CMDSTAN_HOME "${HOME}/.cmdstan/cmdstan-2.26.1/"
 COPY --chown=${NB_UID}:${NB_GID} ./etc/Project.toml ${HOME}/.julia/environments/v${JULIA_MAJOR_VERSION}/
 RUN julia -e 'using Pkg; Pkg.instantiate(); Pkg.API.precompile()'
 
@@ -145,7 +147,7 @@ RUN sudo chown ${NB_UID}:${NB_GID} ${HOME} && \
     mkdir -p ${HOME}/dotfiles-local && \
     cp ${HOME}/etc/{zshrc.local,gitconfig.local} ${HOME}/dotfiles-local && \
     mv ${HOME}/.zshrc ${HOME}/.zshrc.oh-my-zsh.base && \
-    env RCRC=$HOME/dotfiles/rcrc rcup && \
+    env RCRC=$HOME/dotfiles/rcrc rcup -f && \
     sudo usermod -s /bin/zsh ${NB_USER}
 
 COPY --chown=${NB_UID}:${NB_GID} ./etc/p10k.zsh ${HOME}/.p10k.zsh

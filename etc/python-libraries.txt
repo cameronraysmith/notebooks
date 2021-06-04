@@ -28,3 +28,15 @@ sos-papermill
 sos-python
 sos-r
 sklearn
+pyro-ppl
+scanpy
+scvi-tools
+mofapy2
+gpustat
+nbsphinx
+sphinxcontrib-bibtex
+sphinxcontrib-svg2pdfconverter
+sphinx-last-updated-by-git
+sphinx-copybutton
+insipid-sphinx-theme
+cupy-cuda112

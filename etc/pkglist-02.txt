@@ -1,3 +1,5 @@
+bazel
+cudnn
 dhclient
 e2fsprogs
 emacs
@@ -19,6 +21,7 @@ pandoc
 ripgrep
 rsync
 texlive-core
+texlive-latexextra
 the_silver_searcher
 time
 tmux
