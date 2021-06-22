@@ -12,6 +12,7 @@ ENV PATH "${HOME}/.local/bin:${PATH}"
 ENV JULIA_MAJOR_VERSION="1.6"
 ENV CUDA_PATH="/opt/cuda/"
 ENV LD_LIBRARY_PATH="/usr/local/nvidia/lib64"
+ENV DATA_DISK_DIR="/data-*/jovyan/projects/"
 
 # install primary arch packages
 RUN mkdir -p ${HOME}/etc
