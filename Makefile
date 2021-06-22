@@ -351,7 +351,8 @@ install_nvidia_container:
 	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
 			    export LD_LIBRARY_PATH=/usr/local/nvidia/lib64 && \
-			    pacman -Sy --needed --noconfirm --overwrite cudnn'";\
+			    pacman -Syu --needed --noconfirm cudnn'";\
+		echo "* completed installation of CUDA for gpu to container: $(GCP_CONTAINER)" ;\
 	else \
 		echo "* check that you have specified a support PROCESSOR_MODE (gpu or cpu)";\
 		echo "* PROCESSOR_MODE currently set to $(PROCESSOR_MODE)" ;\
@@ -361,6 +362,7 @@ check_nvidia:
 	@if [ "$(PROCESSOR_MODE)" = "cpu" ]; then \
 		echo "* skipping NVIDIA driver check for cpu" ;\
 	elif [ "$(PROCESSOR_MODE)" = "gpu" ]; then \
+		echo "* checking nvidia drivers" ;\
 	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c 'LD_LIBRARY_PATH=/usr/local/nvidia/lib64 /usr/local/nvidia/bin/nvidia-smi'" ;\
 	else \
@@ -373,16 +375,12 @@ install_libraries_container:
 		echo "* installing cpu version of pyro for cpu" ;\
 	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
-			    pacman -Syu --needed --noconfirm bazel && \
-			    pip install pyro-ppl scanpy scvi-tools tensorflow tensorflow-probability mofapy2'" ;\
+				pip install --upgrade pip'";\
 	elif [ "$(PROCESSOR_MODE)" = "gpu" ]; then \
+		echo "* installing packages for gpu setup" ;\
 	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
-			    export LD_LIBRARY_PATH=/usr/local/nvidia/lib64 && \
-				pip install torch==1.8.1+cu111 torchvision==0.9.1+cu111 torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html && \
-				pip install pyro-ppl scanpy scvi-tools tensorflow tensorflow-probability mofapy2 && \
-				pip install gpustat && \
-				CUDA_PATH=/opt/cuda/ pip install cupy-cuda112'" ;\
+				pip install --upgrade pip'";\
 	else \
 		echo "* check that you have specified a support PROCESSOR_MODE (gpu or cpu)";\
 		echo "* PROCESSOR_MODE currently set to $(PROCESSOR_MODE)" ;\
