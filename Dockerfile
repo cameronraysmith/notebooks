@@ -65,7 +65,7 @@ COPY --chown=${NB_UID}:${NB_GID} ./etc/Project.toml ${HOME}/.julia/environments/
 RUN julia -e 'using Pkg; Pkg.instantiate(); Pkg.API.precompile()'
 
 ## install maxima jupyter kernel
-RUN git clone https://github.com/cameronraysmith/maxima-jupyter.git ${HOME}/maxima-jupyter
+RUN git clone https://github.com/robert-dodier/maxima-jupyter.git ${HOME}/maxima-jupyter
 WORKDIR ${HOME}/maxima-jupyter
 
 RUN export PYTHON_SITE=$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])') && \ 
@@ -74,8 +74,8 @@ RUN export PYTHON_SITE=$(python -c 'import sysconfig; print(sysconfig.get_paths(
 	patch ${PYTHON_SITE}/notebook/static/components/codemirror/mode/meta.js codemirror-mode-meta-patch && \ 
 	cp maxima_lexer.py ${PYTHON_SITE}/pygments/lexers/ && \ 
 	patch ${PYTHON_SITE}/pygments/lexers/_mapping.py pygments-mapping-patch
-RUN curl -O https://beta.quicklisp.org/quicklisp.lisp && \
-    sbcl --load quicklisp.lisp --load docker-install-quicklisp.lisp && \
+RUN curl -kLO https://beta.quicklisp.org/quicklisp.lisp && \
+    sbcl --non-interactive --load quicklisp.lisp --load docker-install-quicklisp.lisp && \
     maxima --batch-string="load(\"load-maxima-jupyter.lisp\");jupyter_install();"
 
 ## install R jupyter kernel
