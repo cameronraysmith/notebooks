@@ -93,12 +93,18 @@ RUN pacman -Syu --needed --noconfirm - < ${HOME}/etc/pkglist-02.txt && pacman -S
 # install R packages
 RUN echo $'Sys.setenv(DOWNLOAD_STATIC_LIBV8 = 1); \n\
     install.packages("rstan", repos = "https://cloud.r-project.org/", dependencies = TRUE)' | R --slave
-RUN echo $'install.packages("BiocManager", repos="http://cran.us.r-project.org", Ncpus = 4); \n\
-    install.packages("devtools", repos="http://cran.us.r-project.org", Ncpus = 4); \n\
-    BiocManager::install(c("cBioPortalData", "AnVIL", "iClusterPlus", "MOFA2", \n\
-    "MOFAdata", "tidyverse", "BloodCancerMultiOmics2017", "curatedTCGAData", \n\
-    "GenomicDataCommons"), type = "binary", Ncpus = 4)' | R --slave
 
+COPY --chown=${NB_UID}:${NB_GID} ./etc/install.R ${HOME}/etc/
+RUN Rscript ${HOME}/etc/install.R
+
+# manual install of R packages, see ./etc/install.R
+# RUN echo $'install.packages("BiocManager", repos="http://cran.us.r-project.org", Ncpus = 4); \n\
+#     install.packages("devtools", repos="http://cran.us.r-project.org", Ncpus = 4); \n\
+#     BiocManager::install(c("cBioPortalData", "AnVIL", "iClusterPlus", "MOFA2", \n\
+#     "MOFAdata", "tidyverse", "BloodCancerMultiOmics2017", "curatedTCGAData", \n\
+#     "GenomicDataCommons"), type = "binary", Ncpus = 4)' | R --slave
+#
+# miodin dependencies
 # RUN echo "BiocManager::install(c('MultiDataSet', 'Biobase', 'BiocGenerics',
 #     'oligo', 'snpStats', 'GenomeInfoDb', 'DMRcatedata', 'ArrayExpress',
 #     'AffyCompatible', 'crlmm', 'limma', 'minfi', 'SNPRelate', 'wateRmelon',
