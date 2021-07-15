@@ -7,7 +7,7 @@ depp <- c("BioCircos","cluster","devtools","ggplot2","enrichR","htmlwidgets",
 BioDepp <- c("IRanges","BiocGenerics","clusterProfiler","GenomicRanges",
             "cBioPortalData", "AnVIL", "iClusterPlus", "MOFA2", "MOFAdata",
              "tidyverse", "BloodCancerMultiOmics2017", "curatedTCGAData",
-             "GenomicDataCommons")
+             "GenomicDataCommons","SingleR")
 
 # Check and install missing R packages
 depp.new<-depp[!(depp%in%installed.packages())]
