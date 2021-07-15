@@ -3,6 +3,7 @@ scipy
 pandas
 matplotlib
 arviz
+awscli
 bash_kernel
 bokeh
 causalgraphicalmodels
