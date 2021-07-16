@@ -12,6 +12,7 @@ ENV PATH "${HOME}/.local/bin:${PATH}"
 ENV JULIA_MAJOR_VERSION="1.6"
 ENV CUDA_PATH="/opt/cuda/"
 ENV LD_LIBRARY_PATH="/usr/local/nvidia/lib64"
+ENV DATA_DISK_DIR="/data-*/jovyan/projects/"
 
 # install primary arch packages
 RUN mkdir -p ${HOME}/etc
@@ -64,7 +65,7 @@ COPY --chown=${NB_UID}:${NB_GID} ./etc/Project.toml ${HOME}/.julia/environments/
 RUN julia -e 'using Pkg; Pkg.instantiate(); Pkg.API.precompile()'
 
 ## install maxima jupyter kernel
-RUN git clone https://github.com/cameronraysmith/maxima-jupyter.git ${HOME}/maxima-jupyter
+RUN git clone https://github.com/robert-dodier/maxima-jupyter.git ${HOME}/maxima-jupyter
 WORKDIR ${HOME}/maxima-jupyter
 
 RUN export PYTHON_SITE=$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])') && \ 
@@ -73,8 +74,8 @@ RUN export PYTHON_SITE=$(python -c 'import sysconfig; print(sysconfig.get_paths(
 	patch ${PYTHON_SITE}/notebook/static/components/codemirror/mode/meta.js codemirror-mode-meta-patch && \ 
 	cp maxima_lexer.py ${PYTHON_SITE}/pygments/lexers/ && \ 
 	patch ${PYTHON_SITE}/pygments/lexers/_mapping.py pygments-mapping-patch
-RUN curl -O https://beta.quicklisp.org/quicklisp.lisp && \
-    sbcl --load quicklisp.lisp --load docker-install-quicklisp.lisp && \
+RUN curl -kLO https://beta.quicklisp.org/quicklisp.lisp && \
+    sbcl --non-interactive --load quicklisp.lisp --load docker-install-quicklisp.lisp && \
     maxima --batch-string="load(\"load-maxima-jupyter.lisp\");jupyter_install();"
 
 ## install R jupyter kernel
@@ -92,12 +93,18 @@ RUN pacman -Syu --needed --noconfirm - < ${HOME}/etc/pkglist-02.txt && pacman -S
 # install R packages
 RUN echo $'Sys.setenv(DOWNLOAD_STATIC_LIBV8 = 1); \n\
     install.packages("rstan", repos = "https://cloud.r-project.org/", dependencies = TRUE)' | R --slave
-RUN echo $'install.packages("BiocManager", repos="http://cran.us.r-project.org", Ncpus = 4); \n\
-    install.packages("devtools", repos="http://cran.us.r-project.org", Ncpus = 4); \n\
-    BiocManager::install(c("cBioPortalData", "AnVIL", "iClusterPlus", "MOFA2", \n\
-    "MOFAdata", "tidyverse", "BloodCancerMultiOmics2017", "curatedTCGAData", \n\
-    "GenomicDataCommons"), type = "binary", Ncpus = 4)' | R --slave
 
+COPY --chown=${NB_UID}:${NB_GID} ./etc/install.R ${HOME}/etc/
+RUN Rscript ${HOME}/etc/install.R
+
+# manual install of R packages, see ./etc/install.R
+# RUN echo $'install.packages("BiocManager", repos="http://cran.us.r-project.org", Ncpus = 4); \n\
+#     install.packages("devtools", repos="http://cran.us.r-project.org", Ncpus = 4); \n\
+#     BiocManager::install(c("cBioPortalData", "AnVIL", "iClusterPlus", "MOFA2", \n\
+#     "MOFAdata", "tidyverse", "BloodCancerMultiOmics2017", "curatedTCGAData", \n\
+#     "GenomicDataCommons"), type = "binary", Ncpus = 4)' | R --slave
+#
+# miodin dependencies
 # RUN echo "BiocManager::install(c('MultiDataSet', 'Biobase', 'BiocGenerics',
 #     'oligo', 'snpStats', 'GenomeInfoDb', 'DMRcatedata', 'ArrayExpress',
 #     'AffyCompatible', 'crlmm', 'limma', 'minfi', 'SNPRelate', 'wateRmelon',

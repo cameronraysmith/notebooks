@@ -35,7 +35,7 @@ GCP_ZONE=us-central1-f
 # default variables (may require editing)
 #----------------------------------------#
 
-DOCKER_REGISTRY=registry.hub.docker.com
+DOCKER_REGISTRY=docker.io
 DOCKER_USER=cameronraysmith
 DOCKER_CONTAINER=notebooks
 DOCKER_TAG=latest
@@ -68,13 +68,14 @@ GCP_VM_PREVIOUS=$(GCP_VM)
 # e.g. cameronraysmith/notebooks
 DOCKER_IMAGE=$(DOCKER_USER)/$(DOCKER_CONTAINER)
 # e.g. registry.hub.docker.com/cameronraysmith/notebooks:latest
+# e.g. docker.io/cameronraysmith/notebooks:latest
 DOCKER_URL=$(DOCKER_REGISTRY)/$(DOCKER_IMAGE):$(DOCKER_TAG)
 # e.g. notebooks-gpu-latest
 GCP_VM=$(DOCKER_CONTAINER)-$(DOCKER_TAG)-$(PROCESSOR_MODE)-$(EXTERNAL_PORT)-$(DATA_DISK)
 CHECK_VM=$(shell gcloud compute instances list --filter="name=$(GCP_VM)" | grep -o $(GCP_VM))
 CHECK_DATA_DISK=$(shell gcloud compute disks list --filter="name=$(DATA_DISK) AND zone:($(GCP_ZONE))" | grep -o $(DATA_DISK))
 GCP_IP=$(shell gcloud compute instances describe $(GCP_VM) --format="get(networkInterfaces[0].accessConfigs[0].natIP)")
-GCP_CONTAINER=$(shell gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_URL)' --format '{{.ID}}'")
+GCP_CONTAINER=$(shell gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_IMAGE):$(DOCKER_TAG)' --format '{{.ID}}'")
 
 GIT_COMMIT = $(strip $(shell git rev-parse --short HEAD))
 CODE_VERSION = $(strip $(shell cat VERSION))
@@ -335,12 +336,12 @@ wait_exist_vm:
 	echo "* $(GCP_VM) is now available"
 
 wait_running_container wait_running_container_2:
-	@while [ "$$CONTAINER_IMAGE" != "$(DOCKER_URL)" ]; do \
+	@while [ "$$CONTAINER_IMAGE" != "$(DOCKER_IMAGE):$(DOCKER_TAG)" ]; do \
 		echo "* waiting for container" ;\
 		sleep 5 ;\
-		CONTAINER_IMAGE=`gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_URL)' --format '{{.Image}}'"` ;\
+		CONTAINER_IMAGE=`gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_IMAGE):$(DOCKER_TAG)' --format '{{.Image}}'"` ;\
 	done ;\
-	CONTAINER_ID=`gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_URL)' --format '{{.ID}}'"` ;\
+	CONTAINER_ID=`gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_IMAGE):$(DOCKER_TAG)' --format '{{.ID}}'"` ;\
 	echo "* container $$CONTAINER_ID for image $$CONTAINER_IMAGE is now available"
 
 install_nvidia_container:
@@ -350,7 +351,8 @@ install_nvidia_container:
 	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
 			    export LD_LIBRARY_PATH=/usr/local/nvidia/lib64 && \
-			    pacman -Sy --needed --noconfirm --overwrite cudnn'";\
+			    pacman -Syu --needed --noconfirm cudnn'";\
+		echo "* completed installation of CUDA for gpu to container: $(GCP_CONTAINER)" ;\
 	else \
 		echo "* check that you have specified a support PROCESSOR_MODE (gpu or cpu)";\
 		echo "* PROCESSOR_MODE currently set to $(PROCESSOR_MODE)" ;\
@@ -360,6 +362,7 @@ check_nvidia:
 	@if [ "$(PROCESSOR_MODE)" = "cpu" ]; then \
 		echo "* skipping NVIDIA driver check for cpu" ;\
 	elif [ "$(PROCESSOR_MODE)" = "gpu" ]; then \
+		echo "* checking nvidia drivers" ;\
 	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c 'LD_LIBRARY_PATH=/usr/local/nvidia/lib64 /usr/local/nvidia/bin/nvidia-smi'" ;\
 	else \
@@ -372,16 +375,12 @@ install_libraries_container:
 		echo "* installing cpu version of pyro for cpu" ;\
 	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
-			    pacman -Syu --needed --noconfirm bazel && \
-			    pip install pyro-ppl scanpy scvi-tools tensorflow tensorflow-probability mofapy2'" ;\
+				pip install --upgrade pip'";\
 	elif [ "$(PROCESSOR_MODE)" = "gpu" ]; then \
+		echo "* installing packages for gpu setup" ;\
 	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
-			    export LD_LIBRARY_PATH=/usr/local/nvidia/lib64 && \
-				pip install torch==1.8.1+cu111 torchvision==0.9.1+cu111 torchaudio==0.8.1 -f https://download.pytorch.org/whl/torch_stable.html && \
-				pip install pyro-ppl scanpy scvi-tools tensorflow tensorflow-probability mofapy2 && \
-				pip install gpustat && \
-				CUDA_PATH=/opt/cuda/ pip install cupy-cuda112'" ;\
+				pip install --upgrade pip'";\
 	else \
 		echo "* check that you have specified a support PROCESSOR_MODE (gpu or cpu)";\
 		echo "* PROCESSOR_MODE currently set to $(PROCESSOR_MODE)" ;\
@@ -389,7 +388,7 @@ install_libraries_container:
 
 get_container_id:
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
-	--command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_URL)' --format '{{.ID}}'"
+	--command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_IMAGE):$(DOCKER_TAG)' --format '{{.ID}}'"
 
 container_logs_gcp:
 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
