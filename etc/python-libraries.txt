@@ -8,6 +8,7 @@ bash_kernel
 bokeh
 causalgraphicalmodels
 cmdstanpy
+cptac
 dask
 daft
 git+https://github.com/jeffkaufman/icdiff.git
