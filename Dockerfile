@@ -99,22 +99,6 @@ RUN echo $'Sys.setenv(DOWNLOAD_STATIC_LIBV8 = 1); \n\
 COPY --chown=${NB_UID}:${NB_GID} ./etc/install.R ${HOME}/etc/
 RUN Rscript ${HOME}/etc/install.R
 
-# manual install of R packages, see ./etc/install.R
-# RUN echo $'install.packages("BiocManager", repos="http://cran.us.r-project.org", Ncpus = 4); \n\
-#     install.packages("devtools", repos="http://cran.us.r-project.org", Ncpus = 4); \n\
-#     BiocManager::install(c("cBioPortalData", "AnVIL", "iClusterPlus", "MOFA2", \n\
-#     "MOFAdata", "tidyverse", "BloodCancerMultiOmics2017", "curatedTCGAData", \n\
-#     "GenomicDataCommons"), type = "binary", Ncpus = 4)' | R --slave
-#
-# miodin dependencies
-# RUN echo "BiocManager::install(c('MultiDataSet', 'Biobase', 'BiocGenerics',
-#     'oligo', 'snpStats', 'GenomeInfoDb', 'DMRcatedata', 'ArrayExpress',
-#     'AffyCompatible', 'crlmm', 'limma', 'minfi', 'SNPRelate', 'wateRmelon',
-#     'DMRcate', 'IRanges', 'SummarizedExperiment', 'GenomicRanges', 'DESeq2',
-#     'MSnbase', 'edgeR', 'qvalue', 'mixOmics'), Ncpus=4, type = 'binary', ask = FALSE)" | R --slave
-# RUN echo "devtools::install_git(url = 'https://gitlab.com/algoromics/miodin.git');
-#     devtools::install_git(url = 'https://gitlab.com/algoromics/miodindata.git')" | R --slave
-
 # Copy startup scripts from jupyter-docker-stacks
 COPY stacks/*.sh /usr/local/bin/
 COPY stacks/jupyter_notebook_config.py /etc/jupyter/
