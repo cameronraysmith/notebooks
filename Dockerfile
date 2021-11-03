@@ -46,6 +46,7 @@ RUN pip install wheel \
   jupyterlab-skip-traceback \
   nbgitpuller \
   jupyterhub && \
+pip cache purge && \
 jupyter lab build
 
 
@@ -57,6 +58,7 @@ COPY --chown=${NB_UID}:${NB_GID} ./etc/python-libraries.txt ${HOME}/etc/
 RUN pip install --extra-index-url https://pypi.fury.io/arrow-nightlies/ --pre pyarrow && \
     pip install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html && \
     pip install -r ${HOME}/etc/python-libraries.txt && \
+    pip cache purge && \
     install_cmdstan --version ${CMD_STAN_VERSION} --dir ${HOME}/.cmdstan
 
 ## install julia packages including jupyter kernel
