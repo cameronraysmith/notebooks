@@ -64,8 +64,6 @@ RUN pip install --extra-index-url https://pypi.fury.io/arrow-nightlies/ --pre py
 ## install julia packages including jupyter kernel
 ENV CMDSTAN_HOME "${HOME}/.cmdstan/cmdstan-${CMD_STAN_VERSION}/"
 ENV JULIA_CMDSTAN_HOME "${HOME}/.cmdstan/cmdstan-${CMD_STAN_VERSION}/"
-COPY --chown=${NB_UID}:${NB_GID} ./etc/Project.toml ${HOME}/.julia/environments/v${JULIA_MAJOR_VERSION}/
-RUN julia -e 'using Pkg; Pkg.instantiate(); Pkg.API.precompile()'
 
 ## install maxima jupyter kernel
 RUN git clone https://github.com/robert-dodier/maxima-jupyter.git ${HOME}/maxima-jupyter
@@ -127,6 +125,11 @@ RUN sudo git clone https://aur.archlinux.org/yay.git /opt/yay-git
 RUN sudo chown -R ${NB_UID}:${NB_GID} /opt/yay-git
 RUN cd /opt/yay-git && \
     makepkg -si --noconfirm
+
+## install julia packages
+RUN yay -S --needed --noconfirm "julia-bin"
+COPY --chown=${NB_UID}:${NB_GID} ./etc/Project.toml ${HOME}/.julia/environments/v${JULIA_MAJOR_VERSION}/
+RUN julia -e 'using Pkg; Pkg.instantiate(); Pkg.API.precompile()'
 
 # install dotfiles framework, oh-my-zsh, and powerlevel10k
 WORKDIR ${HOME}

@@ -7,6 +7,5 @@ graphviz
 maxima
 python-pip
 npm
-julia
 r
 sundials
