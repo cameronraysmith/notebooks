@@ -9,8 +9,8 @@ ARG NB_GID="100"
 ENV USER ${NB_USER}
 ENV HOME /home/${NB_USER}
 ENV PATH "${HOME}/.local/bin:${PATH}"
-ENV JULIA_MAJOR_VERSION="1.6"
-ENV CMD_STAN_VERSION="2.27.0"
+ENV JULIA_MAJOR_VERSION="1.7"
+ENV CMD_STAN_VERSION="2.28.2"
 ENV CUDA_PATH="/opt/cuda/"
 ENV LD_LIBRARY_PATH="/usr/local/nvidia/lib64"
 ENV DATA_DISK_DIR="/data-*/jovyan/projects/"
@@ -46,6 +46,7 @@ RUN pip install wheel \
   jupyterlab-skip-traceback \
   nbgitpuller \
   jupyterhub && \
+pip cache purge && \
 jupyter lab build
 
 
@@ -57,13 +58,12 @@ COPY --chown=${NB_UID}:${NB_GID} ./etc/python-libraries.txt ${HOME}/etc/
 RUN pip install --extra-index-url https://pypi.fury.io/arrow-nightlies/ --pre pyarrow && \
     pip install torch==1.9.0+cu111 torchvision==0.10.0+cu111 torchaudio==0.9.0 -f https://download.pytorch.org/whl/torch_stable.html && \
     pip install -r ${HOME}/etc/python-libraries.txt && \
+    pip cache purge && \
     install_cmdstan --version ${CMD_STAN_VERSION} --dir ${HOME}/.cmdstan
 
 ## install julia packages including jupyter kernel
 ENV CMDSTAN_HOME "${HOME}/.cmdstan/cmdstan-${CMD_STAN_VERSION}/"
 ENV JULIA_CMDSTAN_HOME "${HOME}/.cmdstan/cmdstan-${CMD_STAN_VERSION}/"
-COPY --chown=${NB_UID}:${NB_GID} ./etc/Project.toml ${HOME}/.julia/environments/v${JULIA_MAJOR_VERSION}/
-RUN julia -e 'using Pkg; Pkg.instantiate(); Pkg.API.precompile()'
 
 ## install maxima jupyter kernel
 RUN git clone https://github.com/robert-dodier/maxima-jupyter.git ${HOME}/maxima-jupyter
@@ -99,22 +99,6 @@ RUN echo $'Sys.setenv(DOWNLOAD_STATIC_LIBV8 = 1); \n\
 COPY --chown=${NB_UID}:${NB_GID} ./etc/install.R ${HOME}/etc/
 RUN Rscript ${HOME}/etc/install.R
 
-# manual install of R packages, see ./etc/install.R
-# RUN echo $'install.packages("BiocManager", repos="http://cran.us.r-project.org", Ncpus = 4); \n\
-#     install.packages("devtools", repos="http://cran.us.r-project.org", Ncpus = 4); \n\
-#     BiocManager::install(c("cBioPortalData", "AnVIL", "iClusterPlus", "MOFA2", \n\
-#     "MOFAdata", "tidyverse", "BloodCancerMultiOmics2017", "curatedTCGAData", \n\
-#     "GenomicDataCommons"), type = "binary", Ncpus = 4)' | R --slave
-#
-# miodin dependencies
-# RUN echo "BiocManager::install(c('MultiDataSet', 'Biobase', 'BiocGenerics',
-#     'oligo', 'snpStats', 'GenomeInfoDb', 'DMRcatedata', 'ArrayExpress',
-#     'AffyCompatible', 'crlmm', 'limma', 'minfi', 'SNPRelate', 'wateRmelon',
-#     'DMRcate', 'IRanges', 'SummarizedExperiment', 'GenomicRanges', 'DESeq2',
-#     'MSnbase', 'edgeR', 'qvalue', 'mixOmics'), Ncpus=4, type = 'binary', ask = FALSE)" | R --slave
-# RUN echo "devtools::install_git(url = 'https://gitlab.com/algoromics/miodin.git');
-#     devtools::install_git(url = 'https://gitlab.com/algoromics/miodindata.git')" | R --slave
-
 # Copy startup scripts from jupyter-docker-stacks
 COPY stacks/*.sh /usr/local/bin/
 COPY stacks/jupyter_notebook_config.py /etc/jupyter/
@@ -141,6 +125,11 @@ RUN sudo git clone https://aur.archlinux.org/yay.git /opt/yay-git
 RUN sudo chown -R ${NB_UID}:${NB_GID} /opt/yay-git
 RUN cd /opt/yay-git && \
     makepkg -si --noconfirm
+
+## install julia packages
+RUN yay -S --needed --noconfirm "julia-bin"
+COPY --chown=${NB_UID}:${NB_GID} ./etc/Project.toml ${HOME}/.julia/environments/v${JULIA_MAJOR_VERSION}/
+RUN julia -e 'using Pkg; Pkg.instantiate(); Pkg.API.precompile()'
 
 # install dotfiles framework, oh-my-zsh, and powerlevel10k
 WORKDIR ${HOME}
