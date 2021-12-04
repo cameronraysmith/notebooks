@@ -9,3 +9,4 @@ python-pip
 npm
 julia
 r
+sundials
