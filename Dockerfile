@@ -28,6 +28,14 @@ RUN groupadd --gid=${NB_GID} ${NB_USER} && \
     sudo -lU ${NB_USER}
 
 
+## install yay AUR package manager
+RUN sudo git clone https://aur.archlinux.org/yay.git /opt/yay-git
+RUN sudo chown -R ${NB_UID}:${NB_GID} /opt/yay-git
+RUN cd /opt/yay-git && \
+    makepkg -si --noconfirm
+
+RUN yay -S --needed --noconfirm "python39"
+
 # install jupyter
 # https://github.com/arbennett/jupyterlab-themes
 RUN pip install wheel \
@@ -120,11 +128,6 @@ RUN chown -R ${NB_UID}:${NB_GID} ${HOME}
 # switch to NB_USER
 USER ${NB_UID}
 
-## install yay AUR package manager
-RUN sudo git clone https://aur.archlinux.org/yay.git /opt/yay-git
-RUN sudo chown -R ${NB_UID}:${NB_GID} /opt/yay-git
-RUN cd /opt/yay-git && \
-    makepkg -si --noconfirm
 
 ## install julia packages
 RUN yay -S --needed --noconfirm "julia-bin"
