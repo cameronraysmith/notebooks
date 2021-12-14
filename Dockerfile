@@ -27,6 +27,8 @@ RUN groupadd --gid=${NB_GID} ${NB_USER} && \
     echo "${NB_USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook && \
     sudo -lU ${NB_USER}
 
+# reset home directory permissions
+RUN chown -R ${NB_UID}:${NB_GID} ${HOME}
 
 ## install yay AUR package manager
 RUN sudo git clone https://aur.archlinux.org/yay.git /opt/yay-git
