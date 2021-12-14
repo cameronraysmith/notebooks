@@ -32,7 +32,7 @@ RUN groupadd --gid=${NB_GID} ${NB_USER} && \
 RUN sudo git clone https://aur.archlinux.org/yay.git /opt/yay-git
 RUN sudo chown -R ${NB_UID}:${NB_GID} /opt/yay-git
 RUN cd /opt/yay-git && \
-    makepkg -si --noconfirm
+    sudo -u ${NB_USER} makepkg -si --noconfirm
 
 RUN yay -S --needed --noconfirm "python39"
 
