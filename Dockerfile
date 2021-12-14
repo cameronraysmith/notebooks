@@ -36,7 +36,7 @@ RUN sudo chown -R ${NB_UID}:${NB_GID} /opt/yay-git
 RUN cd /opt/yay-git && \
     sudo -u ${NB_USER} makepkg -si --noconfirm
 
-RUN yay -S --needed --noconfirm "python39"
+RUN sudo -u ${NB_USER} yay -S --needed --noconfirm "python39"
 
 # install jupyter
 # https://github.com/arbennett/jupyterlab-themes
