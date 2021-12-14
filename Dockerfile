@@ -93,8 +93,8 @@ COPY --chown=${NB_UID}:${NB_GID} ./etc/pkglist-02.txt ${HOME}/etc/
 RUN pacman -Syu --needed --noconfirm - < ${HOME}/etc/pkglist-02.txt && pacman -Scc --noconfirm
 
 # install R packages
-RUN echo $'Sys.setenv(DOWNLOAD_STATIC_LIBV8 = 1); \n\
-    install.packages("rstan", repos = "https://cloud.r-project.org/", dependencies = TRUE)' | R --slave
+RUN echo $'Sys.setenv(TZ = "GMT", DOWNLOAD_STATIC_LIBV8 = 1); \n\
+    install.packages("rstan", repos = "https://cloud.r-project.org/", dependencies = TRUE,  Ncpus = 4)' | R --slave
 
 COPY --chown=${NB_UID}:${NB_GID} ./etc/install.R ${HOME}/etc/
 RUN Rscript ${HOME}/etc/install.R
