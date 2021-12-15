@@ -27,7 +27,7 @@ RUN groupadd --gid=${NB_GID} ${NB_USER} && \
     echo "${NB_USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook && \
     sudo -lU ${NB_USER}
 
-# reset home directory permissions
+# set home directory permissions for NB_USER
 RUN chown -R ${NB_UID}:${NB_GID} ${HOME}
 
 ## install yay AUR package manager
@@ -37,6 +37,9 @@ RUN cd /opt/yay-git && \
     sudo -u ${NB_USER} makepkg -si --noconfirm
 
 RUN sudo -u ${NB_USER} yay -S --needed --noconfirm "python39"
+
+# reset home directory permissions for root
+RUN chown -R 0:0 ${HOME}
 
 # install jupyter
 # https://github.com/arbennett/jupyterlab-themes
