@@ -5,6 +5,7 @@ git
 gnuplot
 graphviz
 maxima
+python-pip
 npm
 r
 sundials
