@@ -28,18 +28,14 @@ RUN groupadd --gid=${NB_GID} ${NB_USER} && \
     sudo -lU ${NB_USER}
 
 # set home directory permissions for NB_USER
-RUN chown -R ${NB_UID}:${NB_GID} ${HOME}
-
-## install yay AUR package manager
-RUN sudo git clone https://aur.archlinux.org/yay.git /opt/yay-git
-RUN sudo chown -R ${NB_UID}:${NB_GID} /opt/yay-git
-RUN cd /opt/yay-git && \
-    sudo -u ${NB_USER} makepkg -si --noconfirm
-
-RUN sudo -u ${NB_USER} yay -S --needed --noconfirm "python39"
-
+# install yay AUR package manager
 # reset home directory permissions for root
-RUN chown -R 0:0 ${HOME}
+RUN chown -R ${NB_UID}:${NB_GID} ${HOME} && \
+    sudo git clone https://aur.archlinux.org/yay.git /opt/yay-git && \
+    sudo chown -R ${NB_UID}:${NB_GID} /opt/yay-git && \
+    cd /opt/yay-git && \
+    sudo -u ${NB_USER} makepkg -si --noconfirm && \
+    chown -R 0:0 ${HOME}
 
 # install jupyter
 # https://github.com/arbennett/jupyterlab-themes
