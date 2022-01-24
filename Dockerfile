@@ -20,7 +20,7 @@ RUN mkdir -p ${HOME}/etc
 COPY --chown=${NB_UID}:${NB_GID} ./etc/pkglist-01.txt ${HOME}/etc/
 
 ## install primary Arch packages
-RUN pacman -Syu --needed --noconfirm - < ${HOME}/etc/pkglist-01.txt
+RUN pacman -Syu --needed --noconfirm --disable-download-timeout - < ${HOME}/etc/pkglist-01.txt
 RUN pacman -Scc --noconfirm
 RUN groupadd --gid=${NB_GID} ${NB_USER} && \
     useradd --create-home --shell=/bin/false --uid=${NB_UID} --gid=${NB_GID} ${NB_USER} && \
@@ -99,7 +99,7 @@ RUN echo "install.packages('IRkernel', repos='http://cran.us.r-project.org')" | 
 
 # install secondary Arch packages
 COPY --chown=${NB_UID}:${NB_GID} ./etc/pkglist-02.txt ${HOME}/etc/
-RUN pacman -Syu --needed --noconfirm - < ${HOME}/etc/pkglist-02.txt && pacman -Scc --noconfirm
+RUN pacman -Syu --needed --noconfirm --disable-download-timeout - < ${HOME}/etc/pkglist-02.txt && pacman -Scc --noconfirm
 
 # install R packages
 RUN echo $'Sys.setenv(TZ = "GMT", DOWNLOAD_STATIC_LIBV8 = 1); \n\
