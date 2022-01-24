@@ -65,7 +65,7 @@ RUN setcap 'CAP_NET_BIND_SERVICE=+eip' /usr/sbin/jupyter && \
 # install python libraries
 COPY --chown=${NB_UID}:${NB_GID} ./etc/python-libraries.txt ${HOME}/etc/
 RUN pip install --extra-index-url https://pypi.fury.io/arrow-nightlies/ --pre pyarrow && \
-    pip install --pre torch torchvision torchaudio -f https://download.pytorch.org/whl/nightly/cu113/torch_nightly.html && \
+    pip install --pre torch torchvision -f https://download.pytorch.org/whl/nightly/cu115/torch_nightly.html && \
     pip install -r ${HOME}/etc/python-libraries.txt && \
     pip cache purge && \
     install_cmdstan --version ${CMD_STAN_VERSION} --dir ${HOME}/.cmdstan
