@@ -129,9 +129,10 @@ RUN chown -R ${NB_UID}:${NB_GID} ${HOME}
 # switch to NB_USER
 USER ${NB_UID}
 
+## install yay packages
+RUN yay -S --needed --noconfirm - < ${HOME}/etc/pkglist-yay.txt
 
 ## install julia packages
-RUN yay -S --needed --noconfirm "julia-bin"
 COPY --chown=${NB_UID}:${NB_GID} ./etc/Project.toml ${HOME}/.julia/environments/v${JULIA_MAJOR_VERSION}/
 RUN julia -e 'using Pkg; Pkg.instantiate(); Pkg.API.precompile()'
 
