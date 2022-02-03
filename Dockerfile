@@ -130,7 +130,7 @@ RUN chown -R ${NB_UID}:${NB_GID} ${HOME}
 USER ${NB_UID}
 
 ## install yay packages
-RUN yay -S --needed --noconfirm - < ${HOME}/etc/pkglist-yay.txt
+RUN yay -S --needed --noconfirm julia-bin plink-bin
 
 ## install julia packages
 COPY --chown=${NB_UID}:${NB_GID} ./etc/Project.toml ${HOME}/.julia/environments/v${JULIA_MAJOR_VERSION}/
