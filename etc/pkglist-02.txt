@@ -22,6 +22,7 @@ otf-latin-modern
 pandoc
 ripgrep
 rsync
+terraform
 texlive-core
 texlive-latexextra
 the_silver_searcher
