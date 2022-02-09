@@ -136,6 +136,12 @@ RUN yay -S --needed --noconfirm julia-bin plink-bin aws-cli-v2-bin
 COPY --chown=${NB_UID}:${NB_GID} ./etc/Project.toml ${HOME}/.julia/environments/v${JULIA_MAJOR_VERSION}/
 RUN julia -e 'using Pkg; Pkg.instantiate(); Pkg.API.precompile()'
 
+## install nix package manager
+RUN sh <(curl -L https://nixos.org/nix/install) --no-daemon && \
+    mkdir -p ${HOME}/.config/nix
+COPY --chown=${NB_UID}:${NB_GID} ./etc/nix.conf ${HOME}/.config/nix/
+
+
 # install dotfiles framework, oh-my-zsh, and powerlevel10k
 WORKDIR ${HOME}
 RUN sudo chown ${NB_UID}:${NB_GID} ${HOME} && \

@@ -16,7 +16,6 @@ inkscape
 man-db
 man-pages
 netcdf
-nix
 openssh
 otf-latin-modern
 pandoc
