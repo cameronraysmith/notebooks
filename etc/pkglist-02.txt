@@ -1,4 +1,5 @@
 bazel
+cmake
 cudnn
 dhclient
 e2fsprogs
@@ -20,6 +21,7 @@ otf-latin-modern
 pandoc
 ripgrep
 rsync
+terraform
 texlive-core
 texlive-latexextra
 the_silver_searcher

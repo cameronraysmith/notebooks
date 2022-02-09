@@ -4,6 +4,7 @@ sudo
 git
 gnuplot
 graphviz
+libgit2
 maxima
 python-pip
 npm
