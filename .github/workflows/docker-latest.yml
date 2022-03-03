@@ -48,6 +48,7 @@ jobs:
           file: ./Dockerfile
           platforms: linux/amd64
           push: true
+          no-cache: true
           tags: |
             cameronraysmith/notebooks:latest
             ghcr.io/cameronraysmith/notebooks:latest
