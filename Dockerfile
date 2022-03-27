@@ -161,6 +161,7 @@ RUN sudo chown ${NB_UID}:${NB_GID} ${HOME} && \
 
 COPY --chown=${NB_UID}:${NB_GID} ./etc/p10k.zsh ${HOME}/.p10k.zsh
 COPY --chown=${NB_UID}:${NB_GID} ./etc/jupyter_notebook_config.py ${HOME}/.jupyter
+COPY --chown=${NB_UID}:${NB_GID} ./etc/jupyter_server_config.py ${HOME}/.jupyter
 
 
 # Metadata
