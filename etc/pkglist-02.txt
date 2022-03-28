@@ -1,5 +1,6 @@
 bazel
 cmake
+cpanminus
 cudnn
 dhclient
 e2fsprogs
@@ -15,6 +16,7 @@ hub
 inkscape
 man-db
 man-pages
+mariadb
 netcdf
 openssh
 otf-latin-modern

@@ -130,7 +130,7 @@ RUN chown -R ${NB_UID}:${NB_GID} ${HOME}
 USER ${NB_UID}
 
 ## install yay packages
-RUN yay -S --needed --noconfirm julia-bin plink-bin aws-cli-v2-bin
+RUN yay -S --needed --noconfirm julia-bin plink-bin aws-cli-v2-bin samtools
 
 ## install julia packages
 COPY --chown=${NB_UID}:${NB_GID} ./etc/Project.toml ${HOME}/.julia/environments/v${JULIA_MAJOR_VERSION}/
@@ -161,6 +161,7 @@ RUN sudo chown ${NB_UID}:${NB_GID} ${HOME} && \
 
 COPY --chown=${NB_UID}:${NB_GID} ./etc/p10k.zsh ${HOME}/.p10k.zsh
 COPY --chown=${NB_UID}:${NB_GID} ./etc/jupyter_notebook_config.py ${HOME}/.jupyter
+COPY --chown=${NB_UID}:${NB_GID} ./etc/jupyter_server_config.py ${HOME}/.jupyter
 
 
 # Metadata
