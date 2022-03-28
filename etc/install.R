@@ -3,7 +3,7 @@ depp <- c("BioCircos","cluster","devtools","ggplot2","enrichR","htmlwidgets",
           "rio","shiny","shinycssloaders","stringr","viridis","colormap",
           "DT","coloc","curl","dplyr","grDevices","jsonlite","plotly",
           "shinyjs","reshape2","shinythemes","stats","purrr","readr",
-          "UpSetR","textshape","showtext")
+          "UpSetR","textshape","showtext","parallelMap")
 
 BioDepp <- c("IRanges","BiocGenerics","clusterProfiler","GenomicRanges",
             "cBioPortalData","AnVIL","iClusterPlus","MOFA2","MOFAdata",
