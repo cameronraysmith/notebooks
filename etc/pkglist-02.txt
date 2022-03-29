@@ -14,6 +14,7 @@ grub
 htop
 hub
 inkscape
+libxcrypt-compat
 man-db
 man-pages
 mariadb
