@@ -93,7 +93,6 @@ RUN curl -kLO https://beta.quicklisp.org/quicklisp.lisp && \
 RUN echo "install.packages('IRkernel', repos='http://cran.us.r-project.org')" | R --slave && \
     echo "IRkernel::installspec()" | R --slave && \
     python -m bash_kernel.install && \
-    python -m sos_notebook.install && \
     jupyter kernelspec list
 
 
