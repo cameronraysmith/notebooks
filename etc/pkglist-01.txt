@@ -5,6 +5,7 @@ git
 gnuplot
 graphviz
 libgit2
+maxima-sbcl
 maxima
 python-pip
 npm
