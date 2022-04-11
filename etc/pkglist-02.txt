@@ -5,6 +5,7 @@ cudnn
 dhclient
 e2fsprogs
 emacs
+expect
 fd
 fzf
 gcc-fortran
@@ -14,6 +15,8 @@ grub
 htop
 hub
 inkscape
+lftp
+libxcrypt-compat
 man-db
 man-pages
 mariadb
@@ -21,6 +24,8 @@ netcdf
 openssh
 otf-latin-modern
 pandoc
+pigz
+pv
 ripgrep
 rsync
 terraform

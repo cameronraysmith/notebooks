@@ -93,13 +93,13 @@ RUN curl -kLO https://beta.quicklisp.org/quicklisp.lisp && \
 RUN echo "install.packages('IRkernel', repos='http://cran.us.r-project.org')" | R --slave && \
     echo "IRkernel::installspec()" | R --slave && \
     python -m bash_kernel.install && \
-    python -m sos_notebook.install && \
     jupyter kernelspec list
 
 
 # install secondary Arch packages
 COPY --chown=${NB_UID}:${NB_GID} ./etc/pkglist-02.txt ${HOME}/etc/
 RUN pacman -Syu --needed --noconfirm --disable-download-timeout - < ${HOME}/etc/pkglist-02.txt && pacman -Scc --noconfirm
+RUN /usr/bin/vendor_perl/cpanm Archive::Zip DBI DBD::mysql
 
 # install R packages
 RUN echo $'Sys.setenv(TZ = "GMT", DOWNLOAD_STATIC_LIBV8 = 1); \n\
@@ -130,7 +130,7 @@ RUN chown -R ${NB_UID}:${NB_GID} ${HOME}
 USER ${NB_UID}
 
 ## install yay packages
-RUN yay -S --needed --noconfirm julia-bin plink-bin aws-cli-v2-bin samtools
+RUN yay -S --needed --noconfirm julia-bin plink-bin aws-cli-v2-bin samtools google-cloud-sdk gcsfuse
 
 ## install julia packages
 COPY --chown=${NB_UID}:${NB_GID} ./etc/Project.toml ${HOME}/.julia/environments/v${JULIA_MAJOR_VERSION}/
