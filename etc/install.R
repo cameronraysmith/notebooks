@@ -3,13 +3,13 @@ depp <- c("BioCircos","cluster","devtools","ggplot2","enrichR","htmlwidgets",
           "rio","shiny","shinycssloaders","stringr","viridis","colormap",
           "DT","coloc","curl","dplyr","grDevices","jsonlite","plotly",
           "shinyjs","reshape2","shinythemes","stats","purrr","readr",
-          "UpSetR","textshape","showtext","parallelMap")
+          "UpSetR","textshape","showtext","parallelMap","Seurat")
 
 BioDepp <- c("IRanges","BiocGenerics","clusterProfiler","GenomicRanges",
             "cBioPortalData","AnVIL","iClusterPlus","MOFA2","MOFAdata",
              "tidyverse","BloodCancerMultiOmics2017","curatedTCGAData",
             "GenomicDataCommons","SingleR","TCGAbiolinks","maftools",
-            "RTCGAToolbox")
+            "RTCGAToolbox","splatter")
 
 # Check and install missing R packages
 depp.new<-depp[!(depp%in%installed.packages())]

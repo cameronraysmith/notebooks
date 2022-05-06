@@ -7,7 +7,7 @@ graphviz
 libgit2
 maxima-sbcl
 maxima
-python-pip
+python
 npm
 r
 sundials

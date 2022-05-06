@@ -9,6 +9,7 @@ expect
 fd
 fzf
 gcc-fortran
+geos
 ghostscript
 github-cli
 grub

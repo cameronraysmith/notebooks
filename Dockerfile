@@ -21,7 +21,9 @@ COPY --chown=${NB_UID}:${NB_GID} ./etc/pkglist-01.txt ${HOME}/etc/
 
 ## install primary Arch packages
 RUN pacman -Syu --needed --noconfirm --disable-download-timeout - < ${HOME}/etc/pkglist-01.txt
-RUN pacman -Scc --noconfirm
+RUN pacman -Scc --noconfirm && \
+    python -m ensurepip && \
+    ln -s /usr/bin/pip3 /usr/bin/pip
 RUN groupadd --gid=${NB_GID} ${NB_USER} && \
     useradd --create-home --shell=/bin/false --uid=${NB_UID} --gid=${NB_GID} ${NB_USER} && \
     echo "${NB_USER} ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/notebook && \
@@ -39,7 +41,8 @@ RUN chown -R ${NB_UID}:${NB_GID} ${HOME} && \
 
 # install jupyter
 # https://github.com/arbennett/jupyterlab-themes
-RUN pip install wheel \
+RUN pip install setuptools \
+  wheel \
   jupyter \
   jupyterlab \
   git+https://github.com/jupyterlab/jupyterlab-git.git \
