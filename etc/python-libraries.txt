@@ -32,6 +32,7 @@ sklearn
 pyro-ppl
 scanpy
 scvi-tools
+sympy
 cellrank
 mofapy2
 gpustat
