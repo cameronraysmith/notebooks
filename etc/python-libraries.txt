@@ -41,4 +41,4 @@ sphinxcontrib-svg2pdfconverter
 sphinx-last-updated-by-git
 sphinx-copybutton
 insipid-sphinx-theme
-cupy-cuda113
+cupy-cuda116
