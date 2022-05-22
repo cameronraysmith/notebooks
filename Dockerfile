@@ -56,6 +56,9 @@ RUN pip install setuptools \
   aquirdturtle_collapsible_headings \
   jupyterlab-execute-time \
   jupyterlab-skip-traceback \
+  isort \
+  black \
+  jupyterlab-code-formatter \
   nbgitpuller \
   jupyterhub && \
 pip cache purge && \
