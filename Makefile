@@ -156,6 +156,8 @@ startup_gcp: \
   restart_container_2
 endif
 
+update_gcp_machine_type:
+	gcloud compute instances set-machine-type $(GCP_VM) --machine-type $(GCP_MACHINE_TYPE)
 
 update_gcp_zone:
 	gcloud config set compute/zone $(GCP_ZONE)
@@ -190,8 +192,8 @@ create_gcp:
 	elif [ "$(PROCESSOR_MODE)" = "cpu" ]; then \
 		echo "* $(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
-		--image-project=gce-uefi-images \
-		--image-family=cos-stable \
+	    --image-project=cos-cloud \
+	    --image-family=cos-stable \
 	    --container-image $(DOCKER_URL) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \
@@ -206,7 +208,7 @@ create_gcp:
 	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cert.pem" \
 	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/key.pem" \
 	    --container-arg="--ServerApp.root_dir=/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)" \
-		--container-arg="--ServerApp.password=$(JUPYTER_PASSWORD)" \
+	    --container-arg="--ServerApp.password=$(JUPYTER_PASSWORD)" \
 	    --machine-type $(GCP_MACHINE_TYPE) \
 	    --boot-disk-size $(BOOT_DISK_SIZE) \
 	    --disk auto-delete=no,boot=no,device-name=$(DATA_DISK),mode=rw,name=$(DATA_DISK) \
@@ -216,8 +218,8 @@ create_gcp:
 	elif [ "$(PROCESSOR_MODE)" = "gpu" ]; then \
 		echo "* $(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
-		--image-project=gce-uefi-images \
-		--image-family=cos-stable \
+	    --image-project=cos-cloud \
+	    --image-family=cos-stable \
 	    --container-image $(DOCKER_URL) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \
@@ -232,7 +234,7 @@ create_gcp:
 	    --container-arg="--ServerApp.certfile=/$(DATA_DISK)/$(USER_NAME)/certs/cert.pem" \
 	    --container-arg="--ServerApp.keyfile=/$(DATA_DISK)/$(USER_NAME)/certs/key.pem" \
 	    --container-arg="--ServerApp.root_dir=/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)" \
-		--container-arg="--ServerApp.password=$(JUPYTER_PASSWORD)" \
+	    --container-arg="--ServerApp.password=$(JUPYTER_PASSWORD)" \
 	    --machine-type $(GCP_MACHINE_TYPE) \
 	    --boot-disk-size $(BOOT_DISK_SIZE) \
 	    --disk auto-delete=no,boot=no,device-name=$(DATA_DISK),mode=rw,name=$(DATA_DISK) \

@@ -12,10 +12,12 @@ gcc-fortran
 geos
 ghostscript
 github-cli
+glibc
 grub
 htop
 hub
 inkscape
+jdk-openjdk
 lftp
 libxcrypt-compat
 man-db
