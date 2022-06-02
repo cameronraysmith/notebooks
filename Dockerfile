@@ -52,12 +52,12 @@ RUN pip install setuptools \
   jupytext \
   RISE \
   voila \
-  jupyterlab-sos \
   aquirdturtle_collapsible_headings \
   jupyterlab-execute-time \
   jupyterlab-skip-traceback \
   isort \
   black \
+  flake8 \
   jupyterlab-code-formatter \
   nbgitpuller \
   jupyterhub && \
