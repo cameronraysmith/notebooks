@@ -158,7 +158,7 @@ RUN sudo chown ${NB_UID}:${NB_GID} ${HOME} && \
     git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions && \
     git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/themes/powerlevel10k && \
     git clone --depth 1 https://github.com/hlissner/doom-emacs ${HOME}/.emacs.d && \
-    ${HOME}/.emacs.d/bin/doom -y install && \
+    ${HOME}/.emacs.d/bin/doom -y sync && \
     mkdir -p ${HOME}/dotfiles-local && \
     cp ${HOME}/etc/{zshrc.local,gitconfig.local} ${HOME}/dotfiles-local && \
     mv ${HOME}/.zshrc ${HOME}/.zshrc.oh-my-zsh.base && \
