@@ -104,7 +104,7 @@ RUN echo "install.packages('IRkernel', repos='http://cran.us.r-project.org')" | 
 
 # install secondary Arch packages
 COPY --chown=${NB_UID}:${NB_GID} ./etc/pkglist-02.txt ${HOME}/etc/
-RUN pacman -Syu --needed --noconfirm --disable-download-timeout - < ${HOME}/etc/pkglist-02.txt && pacman -Scc --noconfirm
+RUN pacman -Syu --needed --noconfirm --overwrite "*" --disable-download-timeout - < ${HOME}/etc/pkglist-02.txt && pacman -Scc --noconfirm
 RUN /usr/bin/vendor_perl/cpanm Archive::Zip DBI DBD::mysql
 
 # install R packages
