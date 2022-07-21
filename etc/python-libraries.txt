@@ -17,6 +17,7 @@ jupyterlab_latex
 nbdev
 git+https://github.com/pyro-ppl/numpyro.git
 pymc
+git+https://github.com/pyro-ppl/pyro.git
 nbdime
 nbresuse
 seaborn
@@ -29,7 +30,6 @@ sos-papermill
 sos-python
 sos-r
 sklearn
-pyro-ppl
 scanpy
 scvi-tools
 sympy
