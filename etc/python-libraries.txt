@@ -16,7 +16,7 @@ jax
 jupyterlab_latex
 nbdev
 git+https://github.com/pyro-ppl/numpyro.git
-pymc3
+pymc
 nbdime
 nbresuse
 seaborn
