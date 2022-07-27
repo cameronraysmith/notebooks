@@ -4,12 +4,14 @@ pandas
 matplotlib
 arviz
 bash_kernel
+bbknn
 bokeh
 causalgraphicalmodels
 cmdstanpy
 cptac
 dask
 daft
+gdown
 git+https://github.com/jeffkaufman/icdiff.git
 ipywidgets
 jax
