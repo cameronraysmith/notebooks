@@ -60,8 +60,8 @@ else
   EXTERNAL_PORT=80
 endif
 
-DATA_DISK=data
-# DATA_DISK=data-$(GCP_VM_IDENTIFIER)
+# DATA_DISK=data
+DATA_DISK=data-$(GCP_VM_IDENTIFIER)
 
 GCP_VM_PREVIOUS=$(GCP_VM)
 
@@ -89,6 +89,7 @@ initialize_gcp: \
   check_cf_env_set \
   update_gcp_zone \
   create_data_disk \
+  wait \
   create_gcp \
   wait_exist_vm \
   wait_1 \
@@ -97,7 +98,6 @@ initialize_gcp: \
   ssl_cert_copy_to_gcp \
   restart_container_1 \
   wait_2 \
-  install_nvidia_container \
   check_nvidia \
   install_libraries_container \
   external_port_redirect_gcp \
@@ -115,7 +115,6 @@ initialize_gcp: \
   update_gcp_insecure \
   wait_2 \
   wait_running_container_2 \
-  install_nvidia_container \
   check_nvidia \
   install_libraries_container \
   external_port_redirect_gcp \
@@ -133,7 +132,6 @@ startup_gcp: \
   wait_2 \
   restart_container_1 \
   wait_running_container \
-  install_nvidia_container \
   check_nvidia \
   install_libraries_container \
   external_port_redirect_gcp \
@@ -149,12 +147,23 @@ startup_gcp: \
   wait_2 \
   restart_container_1 \
   wait_running_container \
-  install_nvidia_container \
   check_nvidia \
   install_libraries_container \
   external_port_redirect_gcp \
   restart_container_2
 endif
+
+# check_cf_env_set \
+# update_ip_gcp_cf \
+
+quick_startup_gcp: \
+  check_cf_env_set \
+  update_gcp_zone \
+  create_gcp \
+  wait_exist_vm \
+  wait_running_container \
+  external_port_redirect_gcp \
+  update_ip_gcp_cf
 
 GCP_REGION = us-central1
 GCP_PROJECT = quarere
@@ -183,6 +192,7 @@ create_image_instance:
   # --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append \ #
   # --maintenance-policy=MIGRATE \ #
   # --service-account=513975745977-compute@developer.gserviceaccount.com \ #
+
 update_gcp_machine_type:
 	gcloud compute instances set-machine-type $(GCP_VM) --machine-type $(GCP_MACHINE_TYPE)
 
@@ -377,6 +387,7 @@ install_nvidia_container:
 	@if [ "$(PROCESSOR_MODE)" = "cpu" ]; then \
 		echo "* skipping installation of NVIDIA drivers for cpu" ;\
 	elif [ "$(PROCESSOR_MODE)" = "gpu" ]; then \
+		echo "* installing CUDA for gpu to container: $(GCP_CONTAINER)" ;\
 	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
 			    export LD_LIBRARY_PATH=/usr/local/nvidia/lib64 && \
@@ -404,12 +415,12 @@ install_libraries_container:
 		echo "* installing cpu version of pyro for cpu" ;\
 	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
-				pip install --upgrade pip'";\
+				pip freeze'";\
 	elif [ "$(PROCESSOR_MODE)" = "gpu" ]; then \
 		echo "* installing packages for gpu setup" ;\
 	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
-				pip install --upgrade pip'";\
+				pip freeze'";\
 	else \
 		echo "* check that you have specified a support PROCESSOR_MODE (gpu or cpu)";\
 		echo "* PROCESSOR_MODE currently set to $(PROCESSOR_MODE)" ;\
