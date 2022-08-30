@@ -9,13 +9,16 @@ bokeh
 causalgraphicalmodels
 cmdstanpy
 cptac
-dask
+dask[complete]
 daft
+ffq
 gdown
+gget
 git+https://github.com/jeffkaufman/icdiff.git
 ipywidgets
 jax
 jupyterlab_latex
+kb-python
 nbdev
 git+https://github.com/pyro-ppl/numpyro.git
 pymc
