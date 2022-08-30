@@ -59,6 +59,8 @@ RUN pip install setuptools \
   black \
   flake8 \
   jupyterlab-code-formatter \
+  jupyterlab_nvdashboard \
+  dask-labextension \
   nbgitpuller \
   jupyterhub && \
 pip cache purge && \
