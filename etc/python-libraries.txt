@@ -16,7 +16,6 @@ gdown
 gget
 git+https://github.com/jeffkaufman/icdiff.git
 ipywidgets
-jax
 jupyterlab_latex
 kb-python
 nbdev
