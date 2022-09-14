@@ -9,8 +9,8 @@ ARG NB_GID="100"
 ENV USER ${NB_USER}
 ENV HOME /home/${NB_USER}
 ENV PATH "${HOME}/.local/bin:${PATH}"
-ENV JULIA_MAJOR_VERSION="1.7"
-ENV CMD_STAN_VERSION="2.28.2"
+ENV JULIA_MAJOR_VERSION="1.8"
+ENV CMD_STAN_VERSION="2.30.1"
 ENV CUDA_PATH="/opt/cuda/"
 ENV LD_LIBRARY_PATH="/usr/local/nvidia/lib64"
 ENV DATA_DISK_DIR="/data-*/jovyan/projects/"
@@ -59,6 +59,8 @@ RUN pip install setuptools \
   black \
   flake8 \
   jupyterlab-code-formatter \
+  jupyterlab_nvdashboard \
+  dask-labextension \
   nbgitpuller \
   jupyterhub && \
 pip cache purge && \
@@ -71,7 +73,8 @@ RUN setcap 'CAP_NET_BIND_SERVICE=+eip' /usr/sbin/jupyter && \
 # install python libraries
 COPY --chown=${NB_UID}:${NB_GID} ./etc/python-libraries.txt ${HOME}/etc/
 RUN pip install --extra-index-url https://pypi.fury.io/arrow-nightlies/ --pre pyarrow && \
-    pip install --pre torch torchvision -f https://download.pytorch.org/whl/nightly/cu115/torch_nightly.html && \
+    pip install --pre torch torchvision --extra-index-url https://download.pytorch.org/whl/nightly/cu116 && \
+    pip install --upgrade "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_cuda_releases.html && \
     pip install -r ${HOME}/etc/python-libraries.txt && \
     pip cache purge && \
     install_cmdstan --version ${CMD_STAN_VERSION} --dir ${HOME}/.cmdstan
@@ -136,7 +139,9 @@ RUN chown -R ${NB_UID}:${NB_GID} ${HOME}
 USER ${NB_UID}
 
 ## install yay packages
-RUN yay -S --needed --noconfirm --overwrite "*" julia-bin plink-bin aws-cli-v2-bin samtools bcftools google-cloud-sdk gcsfuse
+RUN yay -S --needed --noconfirm --overwrite "*" julia-bin plink-bin aws-cli-v2-bin samtools bcftools google-cloud-sdk gcsfuse mambaforge downgrade
+RUN sudo chown -R ${NB_UID}:${NB_GID} /opt/mambaforge && \
+    /opt/mambaforge/bin/conda update -y -n base --all
 
 ## install julia packages
 COPY --chown=${NB_UID}:${NB_GID} ./etc/Project.toml ${HOME}/.julia/environments/v${JULIA_MAJOR_VERSION}/

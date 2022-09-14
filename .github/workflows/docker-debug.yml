@@ -16,8 +16,8 @@ jobs:
         name: Maximize build space
         uses: easimon/maximize-build-space@master
         with:
-          root-reserve-mb: 54272
-          swap-size-mb: 2048
+          root-reserve-mb: 1024
+          swap-size-mb: 1024
           remove-dotnet: 'true'
           remove-android: 'true'
       -
@@ -42,6 +42,10 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.CR_PAT }}
+      -
+        name: Run docker root relocation script
+        run: ./scripts/mv-docker-root-dir.sh
+        shell: bash
       -
         name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
