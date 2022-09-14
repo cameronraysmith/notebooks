@@ -29,7 +29,9 @@ PROCESSOR_MODE=cpu
 HTTPS=true
 
 # gcloud compute zone
-GCP_ZONE=us-central1-f
+GCP_PROJECT=quarere
+GCP_REGION=us-central1
+GCP_ZONE=$(GCP_REGION)-f
 
 #----------------------------------------#
 # default variables (may require editing)
@@ -48,6 +50,7 @@ GCP_ACCELERATOR_COUNT=1
 
 DATA_DISK_SIZE=200GB
 BOOT_DISK_SIZE=200GB
+DISK_SNAPSHOT_ID=09032022-01
 
 JUPYTER_PORT=8443
 
@@ -165,8 +168,6 @@ quick_startup_gcp: \
   external_port_redirect_gcp \
   update_ip_gcp_cf
 
-GCP_REGION = us-central1
-GCP_PROJECT = quarere
 STORAGE_BUCKET_IMAGES = $(GCP_PROJECT)-nixos-images
 IMAGE_NAME = nixos-image-2205pre351617942b0817e89-x8664-linux
 IMAGE_FILENAME = nixos-image-22.05pre351617.942b0817e89-x86_64-linux.raw.tar.gz
@@ -184,10 +185,10 @@ create_image_instance:
   --zone=$(GCP_ZONE) \
   --machine-type=$(GCP_MACHINE_TYPE) \
   --metadata=enable-oslogin=TRUE \
-  --no-address \
   --create-disk=auto-delete=yes,boot=yes,device-name=nixos-instance-01,image=projects/$(GCP_PROJECT)/global/images/$(IMAGE_NAME),mode=rw,size=200,type=projects/$(GCP_PROJECT)/zones/$(GCP_ZONE)/diskTypes/pd-balanced \
   --reservation-affinity=any \
   --preemptible
+  # --no-address \ #
   # --network-interface=network-tier=PREMIUM,subnet=default \ #
   # --scopes=https://www.googleapis.com/auth/devstorage.read_only,https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring.write,https://www.googleapis.com/auth/servicecontrol,https://www.googleapis.com/auth/service.management.readonly,https://www.googleapis.com/auth/trace.append \ #
   # --maintenance-policy=MIGRATE \ #
@@ -202,12 +203,42 @@ update_gcp_zone:
 list_disk_snapshots:
     gcloud compute snapshots list --sort-by=~creationTimestamp
 
-# e.g.
-# make restore_data_disk_from_snapshot DATA_DISK=test-restore SNAPSHOT=data-user-us-east1-d-20210426075809-k126gh50
-restore_data_disk_from_snapshot:
-	gcloud compute disks create $(DATA_DISK) --source-snapshot=$(SNAPSHOT) --size=$(DATA_DISK_SIZE) --zone=$(GCP_ZONE)
+create_data_disk_snapshot:
+	gcloud compute snapshots create $(DATA_DISK)-$(DISK_SNAPSHOT_ID) \
+	--project=$(GCP_PROJECT) \
+	--source-disk=$(DATA_DISK) \
+	--source-disk-zone=$(GCP_ZONE) \
+	--storage-location=$(GCP_REGION)
 
-delete_previous_gcp: print_make_vars stop_previous_gcp detach_data_disk_gcp
+# e.g.
+# make restore_data_disk_from_snapshot DATA_DISK=test-restore DATA_DISK_SNAPSHOT=data-user-us-east1-d-20210426075809-k126gh50
+#  --source-snapshot=$(DATA_DISK_SNAPSHOT) \#
+restore_data_disk_from_snapshot:
+	gcloud compute disks create $(DATA_DISK) \
+  --type=pd-standard \
+  --source-snapshot=$(DATA_DISK)-$(DISK_SNAPSHOT_ID) \
+	--resource-policies=projects/$(GCP_PROJECT)/regions/$(GCP_REGION)/resourcePolicies/schedule-data-disk \
+  --size=$(DATA_DISK_SIZE) \
+  --zone=$(GCP_ZONE)
+
+create_boot_disk_snapshot:
+	gcloud compute snapshots create $(GCP_VM)-$(DISK_SNAPSHOT_ID) \
+	--project=$(GCP_PROJECT) \
+	--source-disk=$(GCP_VM) \
+	--source-disk-zone=$(GCP_ZONE) \
+	--storage-location=$(GCP_REGION)
+# 	--labels=notebooks=$(DOCKER_TAG) \#
+
+restore_boot_disk_from_snapshot:
+	gcloud compute disks create $(GCP_VM) \
+	--project=$(GCP_PROJECT) \
+	--type=pd-standard \
+	--size=$(BOOT_DISK_SIZE) \
+	--resource-policies=projects/$(GCP_PROJECT)/regions/$(GCP_REGION)/resourcePolicies/schedule-data-disk \
+	--zone=$(GCP_ZONE) \
+	--source-snapshot=$(GCP_VM)-$(DISK_SNAPSHOT_ID) || true
+
+delete_previous_gcp: print_make_vars stop_previous_gcp create_boot_disk_snapshot detach_data_disk_gcp
 	@echo "* delete VM $(GCP_VM_PREVIOUS)"
 	gcloud compute instances delete --quiet $(GCP_VM_PREVIOUS)
 	@echo "* remove GCP known hosts file"
@@ -580,6 +611,9 @@ print_make_vars:
 	$(info    DOCKER_TAG is $(DOCKER_TAG))
 	$(info    GIT_COMMIT is $(GIT_COMMIT))
 	$(info    USER_NAME is $(USER_NAME))
+	$(info    GCP_PROJECT is $(GCP_PROJECT))
+	$(info    GCP_REGION is $(GCP_REGION))
+	$(info    GCP_ZONE is $(GCP_ZONE))
 	$(info    GCP_VM is $(GCP_VM))
 	$(info    GCP_MACHINE_TYPE is $(GCP_MACHINE_TYPE))
 	$(info    GCP_ACCELERATOR_TYPE is $(GCP_ACCELERATOR_TYPE))
