@@ -443,12 +443,12 @@ check_nvidia:
 
 install_libraries_container:
 	@if [ "$(PROCESSOR_MODE)" = "cpu" ]; then \
-		echo "* installing cpu version of pyro for cpu" ;\
+		echo "* installing/listing packages for cpu setup" ;\
 	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
 				pip freeze'";\
 	elif [ "$(PROCESSOR_MODE)" = "gpu" ]; then \
-		echo "* installing packages for gpu setup" ;\
+		echo "* installing/listing packages for gpu setup" ;\
 	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
 				pip freeze'";\
