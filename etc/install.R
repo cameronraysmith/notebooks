@@ -33,7 +33,7 @@ if (length(BioDepp.new)) {
   BiocManager::install(BioDepp, type="source", Ncpus = 4)
 }
 
-Check and install missing devtools packages
+# Check and install missing devtools packages
 devtoolsDepp.new<-devtoolsDepp[!(devtoolsDepp.pkgName%in%installed.packages())]
 if (length(devtoolsDepp.new)) {
     devtools::install_github(devtoolsDepp.new)
