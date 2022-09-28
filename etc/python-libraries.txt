@@ -25,6 +25,7 @@ pymc
 git+https://github.com/pyro-ppl/pyro.git
 nbdime
 nbresuse
+python-igraph
 seaborn
 sos
 sos-notebook
