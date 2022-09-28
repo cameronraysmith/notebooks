@@ -5,6 +5,9 @@ on:
   push:
     branches: develop
 
+env:
+  GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
   multi-registries:
     runs-on: ubuntu-latest
