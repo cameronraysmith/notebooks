@@ -115,7 +115,8 @@ RUN echo $'Sys.setenv(TZ = "GMT", DOWNLOAD_STATIC_LIBV8 = 1); \n\
     install.packages("rstan", repos = "https://cloud.r-project.org/", dependencies = TRUE,  Ncpus = 4)' | R --slave
 
 COPY --chown=${NB_UID}:${NB_GID} ./etc/install.R ${HOME}/etc/
-RUN Rscript ${HOME}/etc/install.R
+RUN --mount=type=secret,id=github_token \
+  GITHUB_PAT=$(cat /run/secrets/github_token) Rscript ${HOME}/etc/install.R
 
 # Copy startup scripts from jupyter-docker-stacks
 COPY stacks/*.sh /usr/local/bin/
