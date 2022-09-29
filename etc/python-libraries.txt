@@ -47,7 +47,8 @@ gpustat
 nbsphinx
 sphinxcontrib-bibtex
 sphinxcontrib-svg2pdfconverter
-sphinx-last-updated-by-git
 sphinx-copybutton
+sphinx-design
+sphinx-inline-tabs
 insipid-sphinx-theme
 cupy-cuda114
