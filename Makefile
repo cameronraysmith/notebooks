@@ -78,7 +78,7 @@ GCP_VM=$(DOCKER_CONTAINER)-$(DOCKER_TAG)-$(PROCESSOR_MODE)-$(EXTERNAL_PORT)-$(DA
 CHECK_VM=$(shell gcloud compute instances list --filter="name=$(GCP_VM)" | grep -o $(GCP_VM))
 CHECK_DATA_DISK=$(shell gcloud compute disks list --filter="name=$(DATA_DISK) AND zone:($(GCP_ZONE))" | grep -o $(DATA_DISK))
 GCP_IP=$(shell gcloud compute instances describe $(GCP_VM) --format="get(networkInterfaces[0].accessConfigs[0].natIP)")
-GCP_CONTAINER=$(shell gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_IMAGE):$(DOCKER_TAG)' --format '{{.ID}}'")
+GCP_CONTAINER=$(shell gcloud compute ssh $(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_IMAGE):$(DOCKER_TAG)' --format '{{.ID}}'")
 
 GIT_COMMIT = $(strip $(shell git rev-parse --short HEAD))
 CODE_VERSION = $(strip $(shell cat VERSION))
@@ -368,15 +368,15 @@ ssh_jupyter_iap_tunnel:
 	gcloud compute ssh $(GCP_VM) -- -L $(JUPYTER_PORT):localhost:$(JUPYTER_PORT)
 
 # update_container_image: start_gcp wait
-# 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+# 	gcloud compute ssh $(GCP_VM) \
 # 	--command 'docker images && docker pull $(DOCKER_URL) && docker images'
 
 update_container_image:
-	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	gcloud compute ssh $(GCP_VM) \
 	--command "docker pull $(DOCKER_URL)"
 
 restart_container_1 restart_container_2:
-	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	gcloud compute ssh $(GCP_VM) \
 	--command 'docker restart $(GCP_CONTAINER)'
 
 debug_container:
@@ -409,9 +409,9 @@ wait_running_container wait_running_container_2:
 	@while [ "$$CONTAINER_IMAGE" != "$(DOCKER_IMAGE):$(DOCKER_TAG)" ]; do \
 		echo "* waiting for container" ;\
 		sleep 5 ;\
-		CONTAINER_IMAGE=`gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_IMAGE):$(DOCKER_TAG)' --format '{{.Image}}'"` ;\
+		CONTAINER_IMAGE=`gcloud compute ssh $(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_IMAGE):$(DOCKER_TAG)' --format '{{.Image}}'"` ;\
 	done ;\
-	CONTAINER_ID=`gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_IMAGE):$(DOCKER_TAG)' --format '{{.ID}}'"` ;\
+	CONTAINER_ID=`gcloud compute ssh $(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_IMAGE):$(DOCKER_TAG)' --format '{{.ID}}'"` ;\
 	echo "* container $$CONTAINER_ID for image $$CONTAINER_IMAGE is now available"
 
 install_nvidia_container:
@@ -419,7 +419,7 @@ install_nvidia_container:
 		echo "* skipping installation of NVIDIA drivers for cpu" ;\
 	elif [ "$(PROCESSOR_MODE)" = "gpu" ]; then \
 		echo "* installing CUDA for gpu to container: $(GCP_CONTAINER)" ;\
-	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	    gcloud compute ssh $(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
 			    export LD_LIBRARY_PATH=/usr/local/nvidia/lib64 && \
 			    pacman -Syu --needed --noconfirm cudnn'";\
@@ -434,7 +434,7 @@ check_nvidia:
 		echo "* skipping NVIDIA driver check for cpu" ;\
 	elif [ "$(PROCESSOR_MODE)" = "gpu" ]; then \
 		echo "* checking nvidia drivers" ;\
-	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	    gcloud compute ssh $(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c 'LD_LIBRARY_PATH=/usr/local/nvidia/lib64 /usr/local/nvidia/bin/nvidia-smi'" ;\
 	else \
 		echo "* check that you have specified a support PROCESSOR_MODE (gpu or cpu)";\
@@ -444,12 +444,12 @@ check_nvidia:
 install_libraries_container:
 	@if [ "$(PROCESSOR_MODE)" = "cpu" ]; then \
 		echo "* installing/listing packages for cpu setup" ;\
-	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	    gcloud compute ssh $(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
 				pip freeze'";\
 	elif [ "$(PROCESSOR_MODE)" = "gpu" ]; then \
 		echo "* installing/listing packages for gpu setup" ;\
-	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	    gcloud compute ssh $(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
 				pip freeze'";\
 	else \
@@ -458,27 +458,27 @@ install_libraries_container:
 	fi
 
 get_container_id:
-	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	gcloud compute ssh $(GCP_VM) \
 	--command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_IMAGE):$(DOCKER_TAG)' --format '{{.ID}}'"
 
 container_logs_gcp:
-	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	gcloud compute ssh $(GCP_VM) \
 	--command "docker logs $(GCP_CONTAINER)"
 
 get_vm_hostname:
-	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	gcloud compute ssh $(GCP_VM) \
 	--command "curl 'http://metadata.google.internal/computeMetadata/v1/instance/hostname' -H 'Metadata-Flavor: Google'"
 
 ssl_cert_copy_to_gcp:
 	gcloud compute scp --recurse etc/certs \
 	$(USER_NAME)@$(GCP_VM):/tmp
-	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	gcloud compute ssh $(GCP_VM) \
 	--command "sudo cp -r /tmp/certs /mnt/disks/gce-containers-mounts/gce-persistent-disks/$(DATA_DISK)/$(USER_NAME) && \
                sudo rm -r /tmp/certs"
 	@echo "* completed copying /etc/certs directory to $(DATA_DISK)/$(USER_NAME)/"
 
 create_notebooks_dir_gcp:
-	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	gcloud compute ssh $(GCP_VM) \
 	--command "sudo install -d -m 0755 -o 1000 -g 100 /mnt/disks/gce-containers-mounts/gce-persistent-disks/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)"
 	@echo "* completed creation of NOTEBOOKS_DIR: $(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)"
 
@@ -491,7 +491,7 @@ check_cf_env_set:
     fi
 
 external_port_redirect_gcp:
-	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	gcloud compute ssh $(GCP_VM) \
 	--command 'sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport $(EXTERNAL_PORT) -j REDIRECT --to-port $(JUPYTER_PORT)'
 
 update_ip_gcp_cf: check_cf_env_set
@@ -513,7 +513,7 @@ wait wait_1 wait_2 wait_3:
 #-----------------------#
 
 ssl_redirect_gcp:
-	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	gcloud compute ssh $(GCP_VM) \
 	--command 'sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8443'
 
 setup_cpu_gcp: \
