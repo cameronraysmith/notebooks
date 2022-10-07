@@ -44,8 +44,12 @@ DOCKER_TAG=latest
 USER_NAME=jovyan
 NOTEBOOKS_DIR=projects
 
-GCP_MACHINE_TYPE=n1-standard-4
+GCP_MACHINE_TYPE=n1-highmem-32 # n1-standard-4 # n1-highmem-8 # n1-highmem-4
 GCP_ACCELERATOR_TYPE=nvidia-tesla-t4
+# GCP_MACHINE_TYPE=a2-highgpu-1g
+# GCP_ACCELERATOR_TYPE=nvidia-tesla-a100
+# GCP_MACHINE_TYPE=a2-ultragpu-1g
+# GCP_ACCELERATOR_TYPE=nvidia-a100-80gb
 GCP_ACCELERATOR_COUNT=1
 
 COS_FAMILY=cos-101-lts
