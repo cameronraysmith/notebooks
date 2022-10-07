@@ -48,6 +48,8 @@ GCP_MACHINE_TYPE=n1-standard-4
 GCP_ACCELERATOR_TYPE=nvidia-tesla-t4
 GCP_ACCELERATOR_COUNT=1
 
+COS_FAMILY=cos-101-lts
+
 DATA_DISK_SIZE=200GB
 BOOT_DISK_SIZE=200GB
 DISK_SNAPSHOT_ID=09032022-01
@@ -261,7 +263,7 @@ create_gcp:
 		echo "* $(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
 	    --image-project=cos-cloud \
-	    --image-family=cos-stable \
+	    --image-family=$(COS_FAMILY) \
 	    --container-image $(DOCKER_URL) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \
@@ -287,7 +289,7 @@ create_gcp:
 		echo "* $(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
 	    --image-project=cos-cloud \
-	    --image-family=cos-stable \
+	    --image-family=$(COS_FAMILY) \
 	    --container-image $(DOCKER_URL) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \
@@ -541,7 +543,7 @@ create_cpu_gcp:
 		echo "* $(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
 		  --image-project=gce-uefi-images \
-		  --image-family=cos-stable \
+		  --image-family=$(COS_FAMILY) \
 	    --container-image $(DOCKER_URL) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \
@@ -573,7 +575,7 @@ create_gpu_gcp:
 		echo "* $(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
 		  --image-project=gce-uefi-images \
-		  --image-family=cos-stable \
+		  --image-family=$(COS_FAMILY) \
 	    --container-image $(DOCKER_URL) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \
