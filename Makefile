@@ -223,28 +223,33 @@ restore_data_disk_from_snapshot:
 	gcloud compute disks create $(DATA_DISK) \
   --type=pd-standard \
   --source-snapshot=$(DATA_DISK)-$(DISK_SNAPSHOT_ID) \
-	--resource-policies=projects/$(GCP_PROJECT)/regions/$(GCP_REGION)/resourcePolicies/schedule-data-disk \
+  --resource-policies=projects/$(GCP_PROJECT)/regions/$(GCP_REGION)/resourcePolicies/schedule-data-disk \
   --size=$(DATA_DISK_SIZE) \
   --zone=$(GCP_ZONE)
 
 create_boot_disk_snapshot:
-	gcloud compute snapshots create $(GCP_VM)-$(DISK_SNAPSHOT_ID) \
-	--project=$(GCP_PROJECT) \
-	--source-disk=$(GCP_VM) \
-	--source-disk-zone=$(GCP_ZONE) \
-	--storage-location=$(GCP_REGION)
+  gcloud compute snapshots create $(GCP_VM_PREVIOUS)-$(DISK_SNAPSHOT_ID) \
+  --project=$(GCP_PROJECT) \
+  --source-disk=$(GCP_VM_PREVIOUS) \
+  --source-disk-zone=$(GCP_ZONE) \
+  --storage-location=$(GCP_REGION)
 # 	--labels=notebooks=$(DOCKER_TAG) \#
 
 restore_boot_disk_from_snapshot:
-	gcloud compute disks create $(GCP_VM) \
+	gcloud compute disks create $(GCP_VM_PREVIOUS) \
 	--project=$(GCP_PROJECT) \
 	--type=pd-standard \
 	--size=$(BOOT_DISK_SIZE) \
 	--resource-policies=projects/$(GCP_PROJECT)/regions/$(GCP_REGION)/resourcePolicies/schedule-data-disk \
 	--zone=$(GCP_ZONE) \
-	--source-snapshot=$(GCP_VM)-$(DISK_SNAPSHOT_ID) || true
+	--source-snapshot=$(GCP_VM_PREVIOUS)-$(DISK_SNAPSHOT_ID) || true
 
-delete_previous_gcp: print_make_vars stop_previous_gcp create_boot_disk_snapshot detach_data_disk_gcp
+# make restore_gcp DISK_SNAPSHOT_ID=10062022-02
+restore_gcp: restore_boot_disk_from_snapshot restore_data_disk_from_snapshot startup_gcp
+	@echo "* restore VM $(GCP_VM)"
+
+# make delete_gcp DISK_SNAPSHOT_ID=10062022-02
+delete_gcp: print_make_vars stop_previous_gcp create_boot_disk_snapshot create_data_disk_snapshot detach_data_disk_gcp
 	@echo "* delete VM $(GCP_VM_PREVIOUS)"
 	gcloud compute instances delete --quiet $(GCP_VM_PREVIOUS)
 	@echo "* remove GCP known hosts file"
@@ -610,6 +615,8 @@ create_gpu_gcp:
 #-----------------------#
 # Make variable check
 #-----------------------#
+print_container:
+	$(info    GCP_CONTAINER is $(GCP_CONTAINER))
 
 print_make_vars:
 	$(info    DOCKER_REGISTRY is $(DOCKER_REGISTRY))
