@@ -15,10 +15,13 @@ ffq
 furo
 gdown
 gget
+harissa
 git+https://github.com/jeffkaufman/icdiff.git
 ipywidgets
 jupyterlab_latex
+junix
 kb-python
+leidenalg
 nbdev
 git+https://github.com/pyro-ppl/numpyro.git
 pymc
@@ -26,6 +29,7 @@ git+https://github.com/pyro-ppl/pyro.git
 nbdime
 nbresuse
 python-igraph
+ray[default]
 seaborn
 sos
 sos-notebook
@@ -41,7 +45,7 @@ scikit-misc
 scvelo
 scvi-tools
 sympy
-cellrank
+git+https://github.com/theislab/cellrank.git
 mofapy2
 gpustat
 nbsphinx
