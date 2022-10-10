@@ -29,7 +29,6 @@ git+https://github.com/pyro-ppl/pyro.git
 nbdime
 nbresuse
 python-igraph
-ray[default]
 seaborn
 sos
 sos-notebook
