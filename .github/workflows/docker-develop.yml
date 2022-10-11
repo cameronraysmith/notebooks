@@ -14,8 +14,8 @@ jobs:
         name: Maximize build space
         uses: cameronraysmith/maximize-build-space@master
         with:
-          root-reserve-mb: 1024
-          swap-size-mb: 1024
+          root-reserve-mb: 512
+          swap-size-mb: 512
           remove-dotnet: 'true'
           remove-android: 'true'
           remove-haskell: 'true'
