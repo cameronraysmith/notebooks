@@ -44,9 +44,15 @@ DOCKER_TAG=latest
 USER_NAME=jovyan
 NOTEBOOKS_DIR=projects
 
-GCP_MACHINE_TYPE=n1-standard-4
+GCP_MACHINE_TYPE=n1-highmem-32 # n1-standard-4 # n1-highmem-8 # n1-highmem-4
 GCP_ACCELERATOR_TYPE=nvidia-tesla-t4
+# GCP_MACHINE_TYPE=a2-highgpu-1g
+# GCP_ACCELERATOR_TYPE=nvidia-tesla-a100
+# GCP_MACHINE_TYPE=a2-ultragpu-1g
+# GCP_ACCELERATOR_TYPE=nvidia-a100-80gb
 GCP_ACCELERATOR_COUNT=1
+
+COS_FAMILY=cos-101-lts
 
 DATA_DISK_SIZE=200GB
 BOOT_DISK_SIZE=200GB
@@ -78,7 +84,7 @@ GCP_VM=$(DOCKER_CONTAINER)-$(DOCKER_TAG)-$(PROCESSOR_MODE)-$(EXTERNAL_PORT)-$(DA
 CHECK_VM=$(shell gcloud compute instances list --filter="name=$(GCP_VM)" | grep -o $(GCP_VM))
 CHECK_DATA_DISK=$(shell gcloud compute disks list --filter="name=$(DATA_DISK) AND zone:($(GCP_ZONE))" | grep -o $(DATA_DISK))
 GCP_IP=$(shell gcloud compute instances describe $(GCP_VM) --format="get(networkInterfaces[0].accessConfigs[0].natIP)")
-GCP_CONTAINER=$(shell gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_IMAGE):$(DOCKER_TAG)' --format '{{.ID}}'")
+GCP_CONTAINER=$(shell gcloud compute ssh $(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_IMAGE):$(DOCKER_TAG)' --format '{{.ID}}'")
 
 GIT_COMMIT = $(strip $(shell git rev-parse --short HEAD))
 CODE_VERSION = $(strip $(shell cat VERSION))
@@ -217,28 +223,33 @@ restore_data_disk_from_snapshot:
 	gcloud compute disks create $(DATA_DISK) \
   --type=pd-standard \
   --source-snapshot=$(DATA_DISK)-$(DISK_SNAPSHOT_ID) \
-	--resource-policies=projects/$(GCP_PROJECT)/regions/$(GCP_REGION)/resourcePolicies/schedule-data-disk \
+  --resource-policies=projects/$(GCP_PROJECT)/regions/$(GCP_REGION)/resourcePolicies/schedule-data-disk \
   --size=$(DATA_DISK_SIZE) \
   --zone=$(GCP_ZONE)
 
 create_boot_disk_snapshot:
-	gcloud compute snapshots create $(GCP_VM)-$(DISK_SNAPSHOT_ID) \
-	--project=$(GCP_PROJECT) \
-	--source-disk=$(GCP_VM) \
-	--source-disk-zone=$(GCP_ZONE) \
-	--storage-location=$(GCP_REGION)
+  gcloud compute snapshots create $(GCP_VM_PREVIOUS)-$(DISK_SNAPSHOT_ID) \
+  --project=$(GCP_PROJECT) \
+  --source-disk=$(GCP_VM_PREVIOUS) \
+  --source-disk-zone=$(GCP_ZONE) \
+  --storage-location=$(GCP_REGION)
 # 	--labels=notebooks=$(DOCKER_TAG) \#
 
 restore_boot_disk_from_snapshot:
-	gcloud compute disks create $(GCP_VM) \
+	gcloud compute disks create $(GCP_VM_PREVIOUS) \
 	--project=$(GCP_PROJECT) \
 	--type=pd-standard \
 	--size=$(BOOT_DISK_SIZE) \
 	--resource-policies=projects/$(GCP_PROJECT)/regions/$(GCP_REGION)/resourcePolicies/schedule-data-disk \
 	--zone=$(GCP_ZONE) \
-	--source-snapshot=$(GCP_VM)-$(DISK_SNAPSHOT_ID) || true
+	--source-snapshot=$(GCP_VM_PREVIOUS)-$(DISK_SNAPSHOT_ID) || true
 
-delete_previous_gcp: print_make_vars stop_previous_gcp create_boot_disk_snapshot detach_data_disk_gcp
+# make restore_gcp DISK_SNAPSHOT_ID=10062022-02
+restore_gcp: restore_boot_disk_from_snapshot restore_data_disk_from_snapshot startup_gcp
+	@echo "* restore VM $(GCP_VM)"
+
+# make delete_gcp DISK_SNAPSHOT_ID=10062022-02
+delete_gcp: print_make_vars stop_previous_gcp create_boot_disk_snapshot create_data_disk_snapshot detach_data_disk_gcp
 	@echo "* delete VM $(GCP_VM_PREVIOUS)"
 	gcloud compute instances delete --quiet $(GCP_VM_PREVIOUS)
 	@echo "* remove GCP known hosts file"
@@ -261,7 +272,7 @@ create_gcp:
 		echo "* $(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
 	    --image-project=cos-cloud \
-	    --image-family=cos-stable \
+	    --image-family=$(COS_FAMILY) \
 	    --container-image $(DOCKER_URL) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \
@@ -287,7 +298,7 @@ create_gcp:
 		echo "* $(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
 	    --image-project=cos-cloud \
-	    --image-family=cos-stable \
+	    --image-family=$(COS_FAMILY) \
 	    --container-image $(DOCKER_URL) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \
@@ -368,15 +379,15 @@ ssh_jupyter_iap_tunnel:
 	gcloud compute ssh $(GCP_VM) -- -L $(JUPYTER_PORT):localhost:$(JUPYTER_PORT)
 
 # update_container_image: start_gcp wait
-# 	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+# 	gcloud compute ssh $(GCP_VM) \
 # 	--command 'docker images && docker pull $(DOCKER_URL) && docker images'
 
 update_container_image:
-	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	gcloud compute ssh $(GCP_VM) \
 	--command "docker pull $(DOCKER_URL)"
 
 restart_container_1 restart_container_2:
-	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	gcloud compute ssh $(GCP_VM) \
 	--command 'docker restart $(GCP_CONTAINER)'
 
 debug_container:
@@ -409,9 +420,9 @@ wait_running_container wait_running_container_2:
 	@while [ "$$CONTAINER_IMAGE" != "$(DOCKER_IMAGE):$(DOCKER_TAG)" ]; do \
 		echo "* waiting for container" ;\
 		sleep 5 ;\
-		CONTAINER_IMAGE=`gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_IMAGE):$(DOCKER_TAG)' --format '{{.Image}}'"` ;\
+		CONTAINER_IMAGE=`gcloud compute ssh $(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_IMAGE):$(DOCKER_TAG)' --format '{{.Image}}'"` ;\
 	done ;\
-	CONTAINER_ID=`gcloud compute ssh $(USER_NAME)@$(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_IMAGE):$(DOCKER_TAG)' --format '{{.ID}}'"` ;\
+	CONTAINER_ID=`gcloud compute ssh $(GCP_VM) --command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_IMAGE):$(DOCKER_TAG)' --format '{{.ID}}'"` ;\
 	echo "* container $$CONTAINER_ID for image $$CONTAINER_IMAGE is now available"
 
 install_nvidia_container:
@@ -419,7 +430,7 @@ install_nvidia_container:
 		echo "* skipping installation of NVIDIA drivers for cpu" ;\
 	elif [ "$(PROCESSOR_MODE)" = "gpu" ]; then \
 		echo "* installing CUDA for gpu to container: $(GCP_CONTAINER)" ;\
-	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	    gcloud compute ssh $(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
 			    export LD_LIBRARY_PATH=/usr/local/nvidia/lib64 && \
 			    pacman -Syu --needed --noconfirm cudnn'";\
@@ -434,7 +445,7 @@ check_nvidia:
 		echo "* skipping NVIDIA driver check for cpu" ;\
 	elif [ "$(PROCESSOR_MODE)" = "gpu" ]; then \
 		echo "* checking nvidia drivers" ;\
-	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	    gcloud compute ssh $(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c 'LD_LIBRARY_PATH=/usr/local/nvidia/lib64 /usr/local/nvidia/bin/nvidia-smi'" ;\
 	else \
 		echo "* check that you have specified a support PROCESSOR_MODE (gpu or cpu)";\
@@ -443,13 +454,13 @@ check_nvidia:
 
 install_libraries_container:
 	@if [ "$(PROCESSOR_MODE)" = "cpu" ]; then \
-		echo "* installing cpu version of pyro for cpu" ;\
-	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+		echo "* installing/listing packages for cpu setup" ;\
+	    gcloud compute ssh $(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
 				pip freeze'";\
 	elif [ "$(PROCESSOR_MODE)" = "gpu" ]; then \
-		echo "* installing packages for gpu setup" ;\
-	    gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+		echo "* installing/listing packages for gpu setup" ;\
+	    gcloud compute ssh $(GCP_VM) \
 	    --command "docker exec -u 0 $(GCP_CONTAINER) sh -c '\
 				pip freeze'";\
 	else \
@@ -458,27 +469,27 @@ install_libraries_container:
 	fi
 
 get_container_id:
-	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	gcloud compute ssh $(GCP_VM) \
 	--command "docker ps --filter 'status=running' --filter 'ancestor=$(DOCKER_IMAGE):$(DOCKER_TAG)' --format '{{.ID}}'"
 
 container_logs_gcp:
-	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	gcloud compute ssh $(GCP_VM) \
 	--command "docker logs $(GCP_CONTAINER)"
 
 get_vm_hostname:
-	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	gcloud compute ssh $(GCP_VM) \
 	--command "curl 'http://metadata.google.internal/computeMetadata/v1/instance/hostname' -H 'Metadata-Flavor: Google'"
 
 ssl_cert_copy_to_gcp:
 	gcloud compute scp --recurse etc/certs \
 	$(USER_NAME)@$(GCP_VM):/tmp
-	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	gcloud compute ssh $(GCP_VM) \
 	--command "sudo cp -r /tmp/certs /mnt/disks/gce-containers-mounts/gce-persistent-disks/$(DATA_DISK)/$(USER_NAME) && \
                sudo rm -r /tmp/certs"
 	@echo "* completed copying /etc/certs directory to $(DATA_DISK)/$(USER_NAME)/"
 
 create_notebooks_dir_gcp:
-	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	gcloud compute ssh $(GCP_VM) \
 	--command "sudo install -d -m 0755 -o 1000 -g 100 /mnt/disks/gce-containers-mounts/gce-persistent-disks/$(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)"
 	@echo "* completed creation of NOTEBOOKS_DIR: $(DATA_DISK)/$(USER_NAME)/$(NOTEBOOKS_DIR)"
 
@@ -491,7 +502,7 @@ check_cf_env_set:
     fi
 
 external_port_redirect_gcp:
-	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	gcloud compute ssh $(GCP_VM) \
 	--command 'sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport $(EXTERNAL_PORT) -j REDIRECT --to-port $(JUPYTER_PORT)'
 
 update_ip_gcp_cf: check_cf_env_set
@@ -513,7 +524,7 @@ wait wait_1 wait_2 wait_3:
 #-----------------------#
 
 ssl_redirect_gcp:
-	gcloud compute ssh $(USER_NAME)@$(GCP_VM) \
+	gcloud compute ssh $(GCP_VM) \
 	--command 'sudo iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 443 -j REDIRECT --to-port 8443'
 
 setup_cpu_gcp: \
@@ -541,7 +552,7 @@ create_cpu_gcp:
 		echo "* $(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
 		  --image-project=gce-uefi-images \
-		  --image-family=cos-stable \
+		  --image-family=$(COS_FAMILY) \
 	    --container-image $(DOCKER_URL) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \
@@ -573,7 +584,7 @@ create_gpu_gcp:
 		echo "* $(GCP_VM) DOES NOT exist; proceeding with creation" ;\
 	    gcloud compute instances create-with-container $(GCP_VM) \
 		  --image-project=gce-uefi-images \
-		  --image-family=cos-stable \
+		  --image-family=$(COS_FAMILY) \
 	    --container-image $(DOCKER_URL) \
 	    --container-restart-policy on-failure \
 	    --container-privileged \
@@ -604,6 +615,8 @@ create_gpu_gcp:
 #-----------------------#
 # Make variable check
 #-----------------------#
+print_container:
+	$(info    GCP_CONTAINER is $(GCP_CONTAINER))
 
 print_make_vars:
 	$(info    DOCKER_REGISTRY is $(DOCKER_REGISTRY))

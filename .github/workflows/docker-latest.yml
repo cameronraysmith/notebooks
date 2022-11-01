@@ -13,8 +13,8 @@ jobs:
         name: Maximize build space
         uses: cameronraysmith/maximize-build-space@master
         with:
-          root-reserve-mb: 1024
-          swap-size-mb: 1024
+          root-reserve-mb: 128
+          swap-size-mb: 128
           remove-dotnet: 'true'
           remove-android: 'true'
           remove-haskell: 'true'
@@ -56,3 +56,5 @@ jobs:
           tags: |
             cameronraysmith/notebooks:latest
             ghcr.io/cameronraysmith/notebooks:latest
+          secrets: |
+            "github_token=${{ secrets.GITHUB_TOKEN }}"
