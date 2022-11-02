@@ -87,8 +87,10 @@ ENV JULIA_CMDSTAN_HOME "${HOME}/.cmdstan/cmdstan-${CMD_STAN_VERSION}/"
 RUN git clone https://github.com/robert-dodier/maxima-jupyter.git ${HOME}/maxima-jupyter
 WORKDIR ${HOME}/maxima-jupyter
 
-RUN export PYTHON_SITE=$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])') && \ 
-	mkdir -p ${PYTHON_SITE}/notebook/static/components/codemirror/mode/maxima/ && \ 
+RUN export PYTHON_SITE=$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])') && \
+	echo ${PYTHON_SITE} && \
+	tree ${PYTHON_SITE} && \
+	mkdir -p ${PYTHON_SITE}/notebook/static/components/codemirror/mode/maxima/ && \
 	cp maxima.js ${PYTHON_SITE}/notebook/static/components/codemirror/mode/maxima/ && \ 
 	patch ${PYTHON_SITE}/notebook/static/components/codemirror/mode/meta.js codemirror-mode-meta-patch
 # && \
