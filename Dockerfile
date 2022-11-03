@@ -89,7 +89,7 @@ WORKDIR ${HOME}/maxima-jupyter
 
 RUN export PYTHON_SITE=$(python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])') && \
 	echo ${PYTHON_SITE} && \
-	tree ${PYTHON_SITE} && \
+	tree ${PYTHON_SITE}/notebook && \
 	mkdir -p ${PYTHON_SITE}/notebook/static/components/codemirror/mode/maxima/ && \
 	cp maxima.js ${PYTHON_SITE}/notebook/static/components/codemirror/mode/maxima/ && \ 
 	patch ${PYTHON_SITE}/notebook/static/components/codemirror/mode/meta.js codemirror-mode-meta-patch
