@@ -149,7 +149,7 @@ RUN sudo chown -R ${NB_UID}:${NB_GID} /opt/mambaforge && \
 ## install julia packages
 COPY --chown=${NB_UID}:${NB_GID} ./etc/Project.toml ${HOME}/.julia/environments/v${JULIA_MAJOR_VERSION}/
 # RUN julia -e 'using Pkg; Pkg.instantiate(); Pkg.API.precompile()'
-RUN julia -e 'using Pkg; Pkg.instantiate()'
+# RUN julia -e 'using Pkg; Pkg.instantiate()'
 
 ## install nix package manager
 RUN sh <(curl -L https://nixos.org/nix/install) --no-daemon && \
