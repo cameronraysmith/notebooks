@@ -142,13 +142,14 @@ RUN chown -R ${NB_UID}:${NB_GID} ${HOME}
 USER ${NB_UID}
 
 ## install yay packages
-RUN yay -S --needed --noconfirm --overwrite "*" plink-bin samtools bcftools google-cloud-sdk gcsfuse mambaforge downgrade
+RUN yay -S --needed --noconfirm --overwrite "*" julia-bin plink-bin samtools bcftools google-cloud-sdk gcsfuse mambaforge downgrade
 RUN sudo chown -R ${NB_UID}:${NB_GID} /opt/mambaforge && \
     /opt/mambaforge/bin/conda update -y -n base --all
 
 ## install julia packages
 COPY --chown=${NB_UID}:${NB_GID} ./etc/Project.toml ${HOME}/.julia/environments/v${JULIA_MAJOR_VERSION}/
-RUN julia -e 'using Pkg; Pkg.instantiate(); Pkg.API.precompile()'
+# RUN julia -e 'using Pkg; Pkg.instantiate(); Pkg.API.precompile()'
+RUN julia -e 'using Pkg; Pkg.instantiate()'
 
 ## install nix package manager
 RUN sh <(curl -L https://nixos.org/nix/install) --no-daemon && \
