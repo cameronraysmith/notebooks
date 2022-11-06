@@ -19,6 +19,7 @@ htop
 hub
 inkscape
 jdk-openjdk
+julia
 lftp
 libxcrypt-compat
 man-db
