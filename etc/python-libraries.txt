@@ -38,7 +38,7 @@ sos-julia
 sos-papermill
 sos-python
 sos-r
-sklearn
+scikit-learn
 scanpy
 scikit-misc
 scvelo
